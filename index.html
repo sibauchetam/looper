@@ -41,6 +41,15 @@ input[type=number],select{width:100%;background:#0d0d0d;border:1px solid var(--l
 input[type=range]{width:100%;accent-color:#fff;margin:3px 0 0}
 input[type=checkbox]{width:16px;height:16px;accent-color:#fff}
 .chk{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--tx)}
+/* слайдер с двумя головками */
+.dual{position:relative;height:36px;margin:8px 0 2px}
+.dual .track{position:absolute;left:11px;right:11px;top:50%;transform:translateY(-50%);height:4px;background:#333;border-radius:2px;pointer-events:none}
+.dual .track i{position:absolute;top:0;bottom:0;background:#fff;border-radius:2px}
+.dual input[type=range]{position:absolute;inset:0;width:100%;height:36px;margin:0;background:none;pointer-events:none;-webkit-appearance:none;appearance:none}
+.dual input[type=range]::-webkit-slider-runnable-track{height:36px;background:transparent}
+.dual input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:22px;height:22px;margin-top:7px;border-radius:50%;background:#fff;border:none;box-shadow:0 0 0 1px #000}
+.dual input[type=range]::-moz-range-track{height:36px;background:transparent}
+.dual input[type=range]::-moz-range-thumb{pointer-events:auto;width:22px;height:22px;border-radius:50%;background:#fff;border:none;box-shadow:0 0 0 1px #000}
 #bar{height:3px;background:var(--line);border-radius:2px;overflow:hidden;margin:10px 0;display:none}
 #bar i{display:block;height:100%;width:0;background:#fff}
 #status{color:var(--mut);font-size:13px;min-height:19px;word-break:break-word}
@@ -89,10 +98,14 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#fff}
 </div>
 
 <details open>
-  <summary>Длительность и отбор</summary>
+  <summary>Длительность лупа</summary>
+  <div class="s" style="margin-top:10px"><label>Диапазон <output id="durOut"></output></label></div>
+  <div class="dual">
+    <div class="track"><i id="fill"></i></div>
+    <input type="range" id="minDur" min="0.1" max="30" step="0.1" value="1.6" aria-label="Мин. длительность">
+    <input type="range" id="maxDur" min="0.1" max="30" step="0.1" value="2.6" aria-label="Макс. длительность">
+  </div>
   <div class="grid">
-    <div class="s"><label>Мин. длительность лупа <output id="minDurOut"></output></label><input type="range" id="minDur" min="0.1" max="10" step="0.1" value="1"></div>
-    <div class="s"><label>Макс. длительность лупа <output id="maxDurOut"></output></label><input type="range" id="maxDur" min="0.2" max="30" step="0.1" value="5"></div>
     <div><label>Начало поиска, с</label><input type="number" id="t0" value="0" min="0" step="0.5"></div>
     <div><label>Конец, с (пусто — до конца)</label><input type="number" id="t1"></div>
     <div class="s"><label>Показать лупов <output id="topNOut"></output></label><input type="range" id="topN" min="1" max="20" step="1" value="5"></div>
@@ -107,7 +120,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#fff}
     <button id="bCr">Сброс</button>
   </div>
   <div id="cropInfo" class="hint">Область: весь кадр (кроп выключен)</div>
-  <p class="hint">Откройте «Область…», тяните рамку за уголки, двигайте её за центр. Область применяется к поиску лупа, бесшовному превью и экспорту — так можно вырезать предмет или игнорировать водяной знак.</p>
+  <p class="hint">Откройте «Область…», тяните рамку за уголки, двигайте её за центр. Область применяется к поиску лупа, бесшовному превью и экспорту.</p>
 </details>
 
 <details>
@@ -149,9 +162,9 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#fff}
     <label class="chk"><input type="checkbox" id="mute" checked> Без звука</label>
     <label class="chk"><input type="checkbox" id="auto" checked> Автостарт лупа</label>
   </div>
-  <p class="hint">Бесшовный режим: луп один раз проигрывается для захвата кадров, дальше крутится ровно, как GIF. Звук идёт от видео — на стыке микро-пауза; с «Без звука» паузы нет. Экспорт записывается в реальном времени, формат webm/mp4 — зависит от браузера.</p>
+  <p class="hint">Бесшовный режим: луп один раз проигрывается для захвата кадров, дальше крутится ровно, как GIF. Экспорт записывается в реальном времени, формат webm/mp4 — зависит от браузера.</p>
 </details>
-<p class="hint">Если браузер затормозил при анализе — приложение само продолжит в реальном времени. Во время анализа не сворачивайте браузер.</p>
+<p class="hint">Вкладку можно сворачивать — поиск встанёт на паузу и продолжится с того же места при возврате.</p>
 </details>
 
 <script>
@@ -169,12 +182,30 @@ const raf=()=>new Promise(r=>requestAnimationFrame(r));
 
 function bind(id,fmt){const el=$(id),out=$(id+'Out');const u=()=>out.textContent=fmt(+el.value);el.addEventListener('input',u);u();}
 function setV(id,val){const el=$(id);el.value=val;el.dispatchEvent(new Event('input'));}
-bind('minDur',x=>x.toFixed(1)+' с');bind('maxDur',x=>x.toFixed(1)+' с');bind('topN',x=>''+x);
+bind('topN',x=>''+x);
 bind('fps',x=>x+' к/с');bind('size',x=>x+' px');
 bind('minMatch',x=>x===0?'выкл':x+' %');bind('diffThr',x=>x+' %');
 bind('refinePairs',x=>x===0?'выкл':'топ '+x);bind('refineRadius',x=>x+' шага');
 bind('rate',x=>'×'+x);bind('spd',x=>'×'+x);
 if(matchMedia('(pointer:coarse)').matches)setV('rate',4);
+
+/* ---------- Слайдер с двумя головками (линейный, 0.1–30 с) ---------- */
+const fill=$('fill');
+function dualSync(push){
+  let mn=+$('minDur').value,mx=+$('maxDur').value;
+  if(mx-mn<0.1){ // головки не пересекаются: одна толкает другую
+    if(push==='min'){mx=Math.min(30,mn+0.1);$('maxDur').value=mx;}
+    else{mn=Math.max(0.1,mx-0.1);$('minDur').value=mn;}
+  }
+  const f=x=>(x-0.1)/(30-0.1);
+  const a=f(mn),b=f(mx);
+  fill.style.left='calc(11px + (100% - 22px)*'+a.toFixed(4)+')';
+  fill.style.width='calc((100% - 22px)*'+(b-a).toFixed(4)+')';
+  $('durOut').textContent=mn.toFixed(1)+' – '+mx.toFixed(1)+' с';
+}
+$('minDur').addEventListener('input',()=>dualSync('min'));
+$('maxDur').addEventListener('input',()=>dualSync('max'));
+dualSync();
 
 const PRESETS={
   fast:{fps:10,size:24,refinePairs:0},
@@ -184,8 +215,8 @@ const PRESETS={
 document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{for(const k in PRESETS[b.dataset.p])setV(k,PRESETS[b.dataset.p][k]);});
 
 const cfg=()=>({
-  minDur:Math.max(.05,+$('minDur').value),
-  maxDur:Math.max(.1,+$('maxDur').value),
+  minDur:Math.max(.05,parseFloat($('minDur').value)||.1),
+  maxDur:Math.max(.1,parseFloat($('maxDur').value)||.2),
   t0:Math.max(0,+$('t0').value||0),
   t1:$('t1').value===''?v.duration:(isFinite(+$('t1').value)?Math.min(+$('t1').value,v.duration):v.duration),
   fps:Math.min(30,Math.max(2,Math.round(+$('fps').value))),
@@ -205,12 +236,12 @@ function prog(i,n){
   st.textContent=phase+'… '+p+'%';
 }
 
-/* ---------- Кроп: геометрия и оверлей ---------- */
+/* ---------- Кроп ---------- */
 function regionPx(){
   const vw=v.videoWidth||640,vh=v.videoHeight||360;
   return{sx:vw*cropR.x,sy:vh*cropR.y,sw:Math.max(2,vw*cropR.w),sh:Math.max(2,vh*cropR.h)};
 }
-function contentRect(){ // видимая область кадра внутри элемента (с учётом letterbox)
+function contentRect(){
   const r=v.getBoundingClientRect();
   const va=(v.videoWidth||16)/(v.videoHeight||9);
   let cw=r.width,ch=r.width/va;
@@ -239,7 +270,7 @@ function squareCrop(){
   const vw=v.videoWidth||640,vh=v.videoHeight||360;
   const cx=(cropR.x+cropR.w/2)*vw,cy=(cropR.y+cropR.h/2)*vh;
   let s=Math.min(cropR.w*vw,cropR.h*vh);
-  if(cropR.w>0.999&&cropR.h>0.999)s=Math.min(vw,vh); // весь кадр → максимальный квадрат
+  if(cropR.w>0.999&&cropR.h>0.999)s=Math.min(vw,vh);
   s=Math.min(s,2*cx,2*cy,2*(vw-cx),2*(vh-cy));
   cropR={x:(cx-s/2)/vw,y:(cy-s/2)/vh,w:s/vw,h:s/vh};
 }
@@ -327,9 +358,14 @@ async function robustSeek(t,tries){
   }
   return false;
 }
+function waitVisible(){return new Promise(r=>{
+  if(!document.hidden)return r();
+  const h=()=>{if(!document.hidden){document.removeEventListener('visibilitychange',h);r();}};
+  document.addEventListener('visibilitychange',h);
+});}
 
 function makeCtx(c){const cnv=document.createElement('canvas');cnv.width=c.size;cnv.height=c.size;return cnv.getContext('2d',{willReadFrequently:true});}
-function drawV(ctx,c){ // в подпись попадает только кроп-область
+function drawV(ctx,c){
   const {sx,sy,sw,sh}=regionPx();
   ctx.drawImage(v,sx,sy,sw,sh,0,0,c.size,c.size);
 }
@@ -340,54 +376,66 @@ function pixels(ctx,c){
   return a;
 }
 
-/* ---------- Захват проигрыванием ---------- */
+/* ---------- Захват проигрыванием.
+   - застой детектируется за stallMs (быстрый фоллбэк вместо 8-секундных таймаутов);
+   - при скрытии вкладки Chrome перестаёт слать кадры → авто-пауза и продолжение по возврату. ---------- */
 async function playCapture(from,to,opt){
-  const rate=opt.rate||1,step=opt.step||0,onFrame=opt.onFrame;
-  if(!(await robustSeek(from,2)))return false;
+  const rate=opt.rate||1,step=opt.step||0,onFrame=opt.onFrame,stallMs=opt.stallMs||2500;
+  if(!(await robustSeek(from,2)))return{ok:false};
   v.muted=true;v.playbackRate=rate;
-  let lastT=-1e9,lastNew=performance.now(),started=performance.now(),resumed=false,done=false,stopped=false;
-  const safety=((to-from)/rate)*4+6000;
+  let lastT=-1e9,lastNew=performance.now(),started=performance.now();
+  let done=false,stopped=false,stalled=false,finish=null;
+  let hidden=false,hideT=0,hiddenAcc=0,lastRescue=0;
+  const budget=((to-from)/rate)*6+8000;
+  const fin=()=>{if(done)return;done=true;if(finish)finish();};
+  const onEnded=()=>fin(); // конец видео — нормальное завершение, не ошибка
+  v.addEventListener('ended',onEnded);
   const wd=setInterval(()=>{
     if(done)return;
-    if(cancel)return stopped=true;
+    if(cancel){stopped=true;return fin();}
+    if(document.hidden){ // вкладка скрыта — кадры не придут, встаём на паузу
+      if(!hidden){hidden=true;hideT=performance.now();v.pause();st.textContent='Пауза — вернитесь на вкладку, поиск продолжится…';}
+      return;
+    }
+    if(hidden){hidden=false;hiddenAcc+=performance.now()-hideT;lastNew=performance.now();lastRescue=performance.now();v.play().catch(()=>{});return;}
+    if(v.ended){return fin();}
     const idle=performance.now()-lastNew;
-    if(idle>3500&&!resumed){resumed=true;v.play().catch(()=>{});}
-    else if(idle>8000)stopped=true;
-    if(performance.now()-started>safety)stopped=true;
-  },500);
+    if(idle>800&&v.paused&&performance.now()-lastRescue>800){lastRescue=performance.now();v.play().catch(()=>{});}
+    if(idle>stallMs){stalled=true;return fin();} // быстрое обнаружение застоя
+    if(performance.now()-started-hiddenAcc>budget){stopped=true;return fin();}
+  },200);
   const push=t=>{
     if(t<from-1e-4)return;
-    if(t>lastT+1e-6&&(step===0||t-lastT>=step-1e-6)){
-      lastT=t;lastNew=performance.now();onFrame(t);
-    }
+    if(t>lastT+1e-6&&(step===0||t-lastT>=step-1e-6)){lastT=t;lastNew=performance.now();onFrame(t);}
   };
   await v.play().catch(()=>{});
-  if(hasR){
-    await new Promise(fin=>{
+  await new Promise(r=>{
+    finish=r;
+    if(hasR){
       const cb=(now,meta)=>{
-        if(done)return fin();
+        if(done)return r();
         push(meta.mediaTime);
-        if(cancel||meta.mediaTime>=to-1e-4||v.ended||stopped){done=true;return fin();}
+        if(cancel||meta.mediaTime>=to-1e-4||v.ended||stopped||stalled){done=true;return r();}
         v.requestVideoFrameCallback(cb);
       };
       v.requestVideoFrameCallback(cb);
-    });
-  }else{
-    await new Promise(fin=>{
+    }else{
       const loop=()=>{
-        if(done)return fin();
+        if(done)return r();
         if(!v.seeking)push(v.currentTime);
-        if(cancel||v.currentTime>=to-1e-4||v.ended||stopped){done=true;return fin();}
+        if(cancel||v.currentTime>=to-1e-4||v.ended||stopped||stalled){done=true;return r();}
         requestAnimationFrame(loop);
       };
       requestAnimationFrame(loop);
-    });
-  }
-  clearInterval(wd);v.pause();v.playbackRate=1;
-  return !cancel&&!stopped;
+    }
+  });
+  clearInterval(wd);
+  v.removeEventListener('ended',onEnded);
+  v.pause();v.playbackRate=1;
+  return{ok:!cancel&&!stopped&&!stalled,stalled};
 }
 
-/* ---------- Скан ---------- */
+/* ---------- Скан: 3 рубежа — ускоренно → реалтайм → покадрово ---------- */
 async function seekScan(from,to,c,est){
   const ctx=makeCtx(c),step=1/c.fps;let fails=0,t=from,n=0;
   while(t<=to+1e-4){
@@ -410,27 +458,40 @@ async function grabFrames(c){
   const ctx=makeCtx(c);
   const push=t=>{drawV(ctx,c);frames.push(pixels(ctx,c));times.push(t);prog(times.length,est);};
   const lastT=()=>times.length?times[times.length-1]:t0-1/c.fps;
+  const covered=()=>lastT()>=t1-1.5/c.fps;
   if(hasR){
-    phase=c.fast&&c.rate>1?'Захват кадров (ускоренно)':'Захват кадров (реальное время)';
     const rate=(c.fast&&c.rate>1)?c.rate:1;
-    let ok=await playCapture(t0,t1,{rate,step:1/c.fps,onFrame:push});
-    if(!ok&&!cancel&&times.length<est-1){
-      fallback=true;phase='Захват кадров (реальное время, после замедления)';
-      st.textContent='Браузер замедлился — продолжаю в реальном времени…';await raf();
-      const from=lastT()+1/c.fps;
-      if(from<t1)await playCapture(from,t1,{rate:1,step:1/c.fps,onFrame:push});
+    phase=rate>1?'Захват кадров (ускоренно)':'Захват кадров (реальное время)';
+    const r1=await playCapture(t0,t1,{rate,step:1/c.fps,onFrame:push,stallMs:2000});
+    if(cancel)throw new Error('cancel');
+    // диапазон пройден (пусть и с потерянными кадрами) — перегонять реалтаймом не нужно
+    if(times.length>=3&&(r1.ok||covered()))return finishScan(c);
+    // быстрый фоллбэк: продолжаем с места остановки
+    fallback=true;
+    let from=times.length?lastT()+1/c.fps:t0;
+    if(rate>1&&from<t1){
+      phase='Захват кадров (реальное время)';
+      st.textContent='Ускоренный захват встал — продолжаю в реальном времени…';await raf();
+      const r2=await playCapture(from,t1,{rate:1,step:1/c.fps,onFrame:push,stallMs:3000});
+      if(cancel)throw new Error('cancel');
+      if(times.length>=3&&(r2.ok||covered()))return finishScan(c);
+      from=times.length?lastT()+1/c.fps:from;
     }
-    if(cancel)throw new Error('cancel');
-    if(times.length>=3)return finishScan(c);
-  }
-  try{
+    // последний рубеж — покадровый seek (работает даже когда воспроизведение невозможно)
     phase='Захват кадров (покадрово)';
-    await seekScan(t0,t1,c,est);
-  }catch(e){
-    if(cancel)throw new Error('cancel');
-    fallback=true;phase='Захват кадров (реальное время)';
-    const from=lastT()+1/c.fps;
-    if(from<t1)await playCapture(from,t1,{rate:1,step:1/c.fps,onFrame:push});
+    if(from<t1){
+      try{await seekScan(from,t1,c,est);}
+      catch(e){if(cancel)throw new Error('cancel');}
+    }
+  }else{
+    phase='Захват кадров (покадрово)';
+    try{await seekScan(t0,t1,c,est);}
+    catch(e){
+      if(cancel)throw new Error('cancel');
+      fallback=true;phase='Захват кадров (реальное время)';
+      const from=lastT()+1/c.fps;
+      if(from<t1)await playCapture(from,t1,{rate:1,step:1/c.fps,onFrame:push,stallMs:3000});
+    }
   }
   if(cancel)throw new Error('cancel');
   if(times.length<3)throw new Error('не удалось получить кадры — попробуйте mp4 или другой браузер');
@@ -452,12 +513,12 @@ async function refine(list,c){
     const r=list[k];
     const s0=Math.max(0,r.a-rad),s1=Math.min(v.duration,r.b+rad);
     const A=[],B=[];
-    const ok=await playCapture(s0,s1,{rate:1,step:0,onFrame:t=>{
+    const cap=await playCapture(s0,s1,{rate:1,step:0,onFrame:t=>{
       drawV(ctx,c);const f=pixels(ctx,c);
       if(t<=r.a+rad+1e-4)A.push({t,f});
       if(t>=r.b-rad-1e-4)B.push({t,f});
     }});
-    if(!ok)continue;
+    if(!cap.ok)continue;
     let best=null;
     for(const x of A)for(const y of B){
       const d=y.t-x.t;
@@ -475,7 +536,7 @@ async function findLoop(){
   if(busy||!v.duration)return;
   const c=cfg();
   if(c.maxDur<=c.minDur)return st.textContent='Макс. длительность должна быть больше минимальной.';
-  if(c.t1-c.t0<c.minDur)return st.textContent='Диапазон поиска короче минимального лупа.';
+  if(c.t1-c.t0<c.minDur)return st.textContent='Диапазон поиска ('+(c.t1-c.t0).toFixed(1)+' с) короче минимального лупа ('+c.minDur.toFixed(1)+' с).';
   busy=true;cancel=false;$('bCancel').hidden=false;
   stopLoop();hidePreview();setCropUI(false);res.innerHTML='';
   $('bFind').disabled=true;$('bPlay').disabled=true;$('bSave').disabled=true;
@@ -537,7 +598,7 @@ async function findLoop(){
     cur=results[0];showResults();
     bar.style.display='none';
     const cr=(cropR.w<0.999||cropR.h<0.999)?' · кроп '+Math.round(cropR.w*100)+'×'+Math.round(cropR.h*100)+'%':'';
-    st.textContent='Готово за '+((performance.now()-T0)/1000).toFixed(1)+' с · '+n+' кадров · совпадение '+((1-cur.score)*100).toFixed(1)+'% · луп '+(cur.b-cur.a).toFixed(2)+' с'+cr+(fallback?' · досканировано после замедления':'');
+    st.textContent='Готово за '+((performance.now()-T0)/1000).toFixed(1)+' с · '+n+' кадров · совпадение '+((1-cur.score)*100).toFixed(1)+'% · луп '+(cur.b-cur.a).toFixed(2)+' с'+cr+(fallback?' · часть диапазона досканирована медленнее':'');
     $('bPlay').disabled=false;$('bSave').disabled=false;
     if($('auto').checked)await startLoop(false);
   }catch(e){
@@ -566,13 +627,13 @@ function sizeCanvas(){
   const dpr=Math.min(window.devicePixelRatio||1,2);
   const W=Math.max(320,Math.min(1280,Math.round(r.width*dpr)));
   const H=Math.max(180,Math.round(W*r.height/Math.max(1,r.width)));
-  if(cv.width!==W||cv.height!==H){cv.width=W;cv.height=H;} // пересоздаём только при реальном изменении
+  if(cv.width!==W||cv.height!==H){cv.width=W;cv.height=H;}
 }
 function fitDraw(src,sw,sh){
   const cw=cv.width,ch=cv.height,s=Math.min(cw/sw,ch/sh);
   cctx.drawImage(src,(cw-sw*s)/2,(ch-sh*s)/2,sw*s,sh*s);
 }
-function drawRegion(){ // живое видео в canvas-режиме с учётом кропа
+function drawRegion(){
   const {sx,sy,sw,sh}=regionPx();
   const cw=cv.width,ch=cv.height,s=Math.min(cw/sw,ch/sh);
   cctx.drawImage(v,sx,sy,sw,sh,(cw-sw*s)/2,(ch-sh*s)/2,sw*s,sh*s);
@@ -586,7 +647,7 @@ function stopDraw(){
   rvId=0;
 }
 
-/* ---------- Превью: кадр в буфере, перерисовка при любом resize ---------- */
+/* ---------- Превью ---------- */
 function hidePreview(){if(previewOn){previewOn=false;cv.classList.remove('on');}}
 async function waitReady(min,timeout){
   const t0=performance.now();
@@ -596,7 +657,7 @@ async function waitReady(min,timeout){
   }
   return true;
 }
-function captureToSnap(){ // полный кадр → буфер превью
+function captureToSnap(){
   if(!v.videoWidth)return false;
   const w=Math.min(v.videoWidth,1280),h=Math.round(w*v.videoHeight/v.videoWidth);
   snap.width=w;snap.height=h;
@@ -622,7 +683,7 @@ async function showPreview(){
   if(!shown&&v.duration>1&&await seekOnce(Math.min(v.duration*.1,v.duration-.05),1500)&&await waitReady(2,1500)){
     if(!frameIsBlack()&&captureToSnap())shown=true;
   }
-  if(!shown){ // приём «проиграть 1 кадр и встать» — работает даже на iOS
+  if(!shown){
     v.muted=true;v.playbackRate=1;
     try{v.currentTime=0;}catch(e){}
     try{await v.play();}catch(e){}
@@ -650,14 +711,14 @@ async function prepSequence(){
   const cx=cnv.getContext('2d');
   const maxN=360,minInt=Math.max(1/60,D/maxN);
   const fr=[];let cnt=0;
-  const ok=await playCapture(A,B,{rate:1,step:minInt,onFrame:t=>{
+  const cap=await playCapture(A,B,{rate:1,step:minInt,onFrame:t=>{
     cx.drawImage(v,sx,sy,sw,sh,0,0,w,h);
     fr.push({t,u:cnv.toDataURL('image/jpeg',0.9)});
     if((++cnt%3)===0)fitDraw(cnv,w,h);
     st.textContent='Подготовка бесшовного лупа… '+Math.min(99,Math.round((t-A)/D*100))+'%';
   }});
   if(cancel)return false;
-  if(!ok||fr.length<3)return false;
+  if(!cap.ok||fr.length<3)return false;
   const s={key,fr,dur:Math.max(1e-3,fr[fr.length-1].t-fr[0].t),w,h,imgs:new Map()};
   seqCache.push(s);
   if(seqCache.length>2)seqCache.shift();
@@ -790,7 +851,6 @@ function tick(){
 }
 $('mute').addEventListener('change',()=>{if(playing){v.muted=$('mute').checked;_mute=v.muted;}});
 
-/* перерисовка при любом изменении размера (скролл/адресная строка/поворот) */
 function onResize(){
   if(previewOn){sizeCanvas();drawPreview();}
   else if(playing)sizeCanvas();
@@ -799,7 +859,7 @@ function onResize(){
 if('ResizeObserver' in window)new ResizeObserver(onResize).observe(v);
 addEventListener('resize',onResize);
 
-/* ---------- Экспорт (с учётом кропа) ---------- */
+/* ---------- Экспорт ---------- */
 let actx=null,mediaDst=null;
 function ensureAudio(){
   if(actx)return;
@@ -879,7 +939,7 @@ async function loadBlob(blob){
   if(url)URL.revokeObjectURL(url);
   url=URL.createObjectURL(blob);v.src=url;
   await new Promise(r=>{v.onloadedmetadata=r;v.onerror=r;});
-  if(!isFinite(v.duration)||!v.duration){ // webm без длительности
+  if(!isFinite(v.duration)||!v.duration){
     await new Promise(r=>{v.ondurationchange=r;v.currentTime=1e7;});
     v.currentTime=0;
   }
