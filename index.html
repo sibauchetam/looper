@@ -11,11 +11,19 @@
 body{margin:0 auto;max-width:720px;padding:16px 14px 48px;background:var(--bg);color:var(--tx);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 h1{font-size:16px;margin:0;color:#fff}
 .sub{color:var(--mut);font-size:12.5px;margin:2px 0 14px}
-.vwrap{position:relative}
+.vwrap{position:relative;overflow:hidden}
 video{width:100%;max-height:44vh;background:#000;border-radius:4px;display:block;border:1px solid var(--line)}
 video:not(.has){min-height:140px;border:1px dashed var(--line);background:var(--card)}
 #cv{position:absolute;inset:0;width:100%;height:100%;border-radius:4px;display:none;pointer-events:none;background:#000}
 #cv.on{display:block}
+#cropOv{position:absolute;display:none;touch-action:none;z-index:6;user-select:none;-webkit-user-select:none}
+#cropOv.on{display:block}
+#cropBox{position:absolute;border:1px solid #fff;box-shadow:0 0 0 9999px rgba(0,0,0,.45);cursor:move}
+#cropBox i{position:absolute;width:14px;height:14px;background:#fff;border:1px solid #000;border-radius:2px}
+.h-tl{left:-8px;top:-8px;cursor:nwse-resize}
+.h-tr{right:-8px;top:-8px;cursor:nesw-resize}
+.h-bl{left:-8px;bottom:-8px;cursor:nesw-resize}
+.h-br{right:-8px;bottom:-8px;cursor:nwse-resize}
 .row{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
 button{background:var(--card);border:1px solid #3a3a3a;color:var(--tx);padding:8px 13px;border-radius:3px;font:inherit;font-size:13.5px;cursor:pointer}
 button:active{background:#1d1d1d}
@@ -52,6 +60,12 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#fff}
 <div class="vwrap">
   <video id="v" playsinline webkit-playsinline muted preload="auto"></video>
   <canvas id="cv"></canvas>
+  <div id="cropOv">
+    <div id="cropBox">
+      <i class="h-tl" data-c="tl"></i><i class="h-tr" data-c="tr"></i>
+      <i class="h-bl" data-c="bl"></i><i class="h-br" data-c="br"></i>
+    </div>
+  </div>
 </div>
 
 <div class="row">
@@ -86,11 +100,21 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#fff}
 </details>
 
 <details>
+  <summary>Кадрирование — область поиска и экспорта</summary>
+  <div class="row">
+    <button id="bCrop">Область…</button>
+    <button id="bSq">1:1</button>
+    <button id="bCr">Сброс</button>
+  </div>
+  <div id="cropInfo" class="hint">Область: весь кадр (кроп выключен)</div>
+  <p class="hint">Откройте «Область…», тяните рамку за уголки, двигайте её за центр. Область применяется к поиску лупа, бесшовному превью и экспорту — так можно вырезать предмет или игнорировать водяной знак.</p>
+</details>
+
+<details>
   <summary>Точность и скорость поиска</summary>
   <div class="grid">
     <div class="s"><label>Частота анализа <output id="fpsOut"></output></label><input type="range" id="fps" min="2" max="30" step="1" value="15"></div>
     <div class="s"><label>Точность сравнения <output id="sizeOut"></output></label><input type="range" id="size" min="16" max="64" step="8" value="32"></div>
-    <div class="s"><label>Обрезка краёв, % <output id="cropOut"></output></label><input type="range" id="crop" min="0" max="30" step="1" value="0"></div>
     <div class="s"><label>Мин. совпадение <output id="minMatchOut"></output></label><input type="range" id="minMatch" min="0" max="100" step="5" value="0"></div>
     <div class="s"><label>Скрывать перекрывающиеся <output id="diffThrOut"></output></label><input type="range" id="diffThr" min="0" max="100" step="5" value="60"></div>
   </div>
@@ -134,9 +158,11 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#fff}
 'use strict';
 const $=id=>document.getElementById(id);
 const v=$('v'),cv=$('cv'),cctx=cv.getContext('2d'),st=$('status'),bar=$('bar'),barI=bar.firstElementChild,res=$('res');
+const cropOv=$('cropOv'),cropBox=$('cropBox');
 const hasR='requestVideoFrameCallback' in HTMLVideoElement.prototype;
 let frames=[],times=[],frameStep=1/15,results=[],cur=null,playing=false,busy=false,prep=false,cancel=false,url=null,fallback=false;
 let _rate=-1,_mute=null,rvId=0,phase='',previewOn=false;
+let cropR={x:0,y:0,w:1,h:1},cropOn=false,dragC=null;
 const snap=document.createElement('canvas');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const raf=()=>new Promise(r=>requestAnimationFrame(r));
@@ -144,7 +170,7 @@ const raf=()=>new Promise(r=>requestAnimationFrame(r));
 function bind(id,fmt){const el=$(id),out=$(id+'Out');const u=()=>out.textContent=fmt(+el.value);el.addEventListener('input',u);u();}
 function setV(id,val){const el=$(id);el.value=val;el.dispatchEvent(new Event('input'));}
 bind('minDur',x=>x.toFixed(1)+' с');bind('maxDur',x=>x.toFixed(1)+' с');bind('topN',x=>''+x);
-bind('fps',x=>x+' к/с');bind('size',x=>x+' px');bind('crop',x=>x===0?'выкл':x+' %');
+bind('fps',x=>x+' к/с');bind('size',x=>x+' px');
 bind('minMatch',x=>x===0?'выкл':x+' %');bind('diffThr',x=>x+' %');
 bind('refinePairs',x=>x===0?'выкл':'топ '+x);bind('refineRadius',x=>x+' шага');
 bind('rate',x=>'×'+x);bind('spd',x=>'×'+x);
@@ -164,13 +190,13 @@ const cfg=()=>({
   t1:$('t1').value===''?v.duration:(isFinite(+$('t1').value)?Math.min(+$('t1').value,v.duration):v.duration),
   fps:Math.min(30,Math.max(2,Math.round(+$('fps').value))),
   size:Math.round(+$('size').value),
-  crop:Math.min(40,Math.max(0,+$('crop').value)),
   topN:Math.min(20,Math.max(1,Math.round(+$('topN').value))),
   minMatch:Math.max(0,+$('minMatch').value),
   diffThr:Math.min(100,Math.max(0,+$('diffThr').value)),
   refinePairs:Math.max(0,Math.round(+$('refinePairs').value)),
   refineRadius:Math.max(.5,+$('refineRadius').value),
   rate:Math.min(16,Math.max(1,Math.round(+$('rate').value))),
+  crop:cropR,
   color:$('color').checked,fast:$('fast').checked,fromStart:$('fromStart').checked
 });
 function prog(i,n){
@@ -179,7 +205,103 @@ function prog(i,n){
   st.textContent=phase+'… '+p+'%';
 }
 
-/* ---------- Надёжный seek: пауза, попытки, опрос ---------- */
+/* ---------- Кроп: геометрия и оверлей ---------- */
+function regionPx(){
+  const vw=v.videoWidth||640,vh=v.videoHeight||360;
+  return{sx:vw*cropR.x,sy:vh*cropR.y,sw:Math.max(2,vw*cropR.w),sh:Math.max(2,vh*cropR.h)};
+}
+function contentRect(){ // видимая область кадра внутри элемента (с учётом letterbox)
+  const r=v.getBoundingClientRect();
+  const va=(v.videoWidth||16)/(v.videoHeight||9);
+  let cw=r.width,ch=r.width/va;
+  if(ch>r.height){ch=r.height;cw=r.height*va;}
+  return{x:(r.width-cw)/2,y:(r.height-ch)/2,w:cw,h:ch};
+}
+function applyCropBox(){
+  cropBox.style.left=(cropR.x*100)+'%';cropBox.style.top=(cropR.y*100)+'%';
+  cropBox.style.width=(cropR.w*100)+'%';cropBox.style.height=(cropR.h*100)+'%';
+}
+function layoutCrop(){
+  const c=contentRect();
+  cropOv.style.left=c.x+'px';cropOv.style.top=c.y+'px';
+  cropOv.style.width=c.w+'px';cropOv.style.height=c.h+'px';
+  applyCropBox();
+}
+function clampRect(x1,y1,x2,y2){
+  if(x2<x1)[x1,x2]=[x2,x1];
+  if(y2<y1)[y1,y2]=[y2,y1];
+  const m=.05;
+  x1=Math.max(0,Math.min(x1,1-m));x2=Math.max(x1+m,Math.min(x2,1));
+  y1=Math.max(0,Math.min(y1,1-m));y2=Math.max(y1+m,Math.min(y2,1));
+  return{x:x1,y:y1,w:x2-x1,h:y2-y1};
+}
+function squareCrop(){
+  const vw=v.videoWidth||640,vh=v.videoHeight||360;
+  const cx=(cropR.x+cropR.w/2)*vw,cy=(cropR.y+cropR.h/2)*vh;
+  let s=Math.min(cropR.w*vw,cropR.h*vh);
+  if(cropR.w>0.999&&cropR.h>0.999)s=Math.min(vw,vh); // весь кадр → максимальный квадрат
+  s=Math.min(s,2*cx,2*cy,2*(vw-cx),2*(vh-cy));
+  cropR={x:(cx-s/2)/vw,y:(cy-s/2)/vh,w:s/vw,h:s/vh};
+}
+function updateCropInfo(){
+  const full=cropR.w>0.999&&cropR.h>0.999;
+  $('cropInfo').textContent=full
+    ?'Область: весь кадр (кроп выключен)'
+    :'Область: '+Math.round(cropR.w*100)+'×'+Math.round(cropR.h*100)+'% — действует на поиск, превью и экспорт';
+}
+function setCropUI(on){
+  cropOn=on;
+  cropOv.classList.toggle('on',on);
+  $('bCrop').textContent=on?'Готово':'Область…';
+  if(on)layoutCrop();
+}
+cropOv.addEventListener('pointerdown',e=>{
+  if(!v.videoWidth)return;
+  const c=contentRect(),vr=v.getBoundingClientRect();
+  const px=(e.clientX-vr.left-c.x)/c.w,py=(e.clientY-vr.top-c.y)/c.h;
+  const corner=e.target.dataset?e.target.dataset.c:null;
+  if(corner)dragC={corner,start:{...cropR}};
+  else if(e.target===cropBox)dragC={move:true,ox:px-cropR.x,oy:py-cropR.y};
+  else return;
+  e.preventDefault();
+  cropOv.setPointerCapture(e.pointerId);
+});
+cropOv.addEventListener('pointermove',e=>{
+  if(!dragC)return;
+  const c=contentRect(),vr=v.getBoundingClientRect();
+  const px=Math.min(1,Math.max(0,(e.clientX-vr.left-c.x)/c.w));
+  const py=Math.min(1,Math.max(0,(e.clientY-vr.top-c.y)/c.h));
+  if(dragC.corner){
+    const s=dragC.start;
+    let x1=s.x,y1=s.y,x2=s.x+s.w,y2=s.y+s.h;
+    if(dragC.corner.includes('l'))x1=px;else x2=px;
+    if(dragC.corner.includes('t'))y1=py;else y2=py;
+    cropR=clampRect(x1,y1,x2,y2);
+  }else{
+    cropR.x=Math.min(1-cropR.w,Math.max(0,px-dragC.ox));
+    cropR.y=Math.min(1-cropR.h,Math.max(0,py-dragC.oy));
+  }
+  applyCropBox();updateCropInfo();
+});
+const endDrag=()=>{if(dragC){dragC=null;updateCropInfo();}};
+cropOv.addEventListener('pointerup',endDrag);
+cropOv.addEventListener('pointercancel',endDrag);
+$('bCrop').onclick=()=>{
+  if(!v.videoWidth){st.textContent='Сначала загрузите видео.';return;}
+  setCropUI(!cropOn);
+};
+$('bSq').onclick=()=>{
+  if(!v.videoWidth){st.textContent='Сначала загрузите видео.';return;}
+  squareCrop();if(!cropOn)setCropUI(true);else applyCropBox();
+  updateCropInfo();
+};
+$('bCr').onclick=()=>{
+  cropR={x:0,y:0,w:1,h:1};
+  if(cropOn)applyCropBox();
+  updateCropInfo();
+};
+
+/* ---------- Надёжный seek ---------- */
 function seekOnce(t,timeout){return new Promise(r=>{
   const target=Math.min(Math.max(t,0),(v.duration||1)-.001);
   if(!v.seeking&&Math.abs(v.currentTime-target)<.005)return r(true);
@@ -207,10 +329,9 @@ async function robustSeek(t,tries){
 }
 
 function makeCtx(c){const cnv=document.createElement('canvas');cnv.width=c.size;cnv.height=c.size;return cnv.getContext('2d',{willReadFrequently:true});}
-function drawV(ctx,c){
-  const vw=v.videoWidth||1,vh=v.videoHeight||1,m=c.crop/100;
-  if(m>0)ctx.drawImage(v,vw*m,vh*m,vw*(1-2*m),vh*(1-2*m),0,0,c.size,c.size);
-  else ctx.drawImage(v,0,0,c.size,c.size);
+function drawV(ctx,c){ // в подпись попадает только кроп-область
+  const {sx,sy,sw,sh}=regionPx();
+  ctx.drawImage(v,sx,sy,sw,sh,0,0,c.size,c.size);
 }
 function pixels(ctx,c){
   const d=ctx.getImageData(0,0,c.size,c.size).data,n=c.size*c.size,a=new Uint8Array(n*(c.color?3:1));
@@ -219,7 +340,7 @@ function pixels(ctx,c){
   return a;
 }
 
-/* ---------- Захват проигрыванием: БЕЗ seek ---------- */
+/* ---------- Захват проигрыванием ---------- */
 async function playCapture(from,to,opt){
   const rate=opt.rate||1,step=opt.step||0,onFrame=opt.onFrame;
   if(!(await robustSeek(from,2)))return false;
@@ -266,7 +387,7 @@ async function playCapture(from,to,opt){
   return !cancel&&!stopped;
 }
 
-/* ---------- Скан: проигрывание → ×1 → в крайнем случае seek ---------- */
+/* ---------- Скан ---------- */
 async function seekScan(from,to,c,est){
   const ctx=makeCtx(c),step=1/c.fps;let fails=0,t=from,n=0;
   while(t<=to+1e-4){
@@ -320,7 +441,7 @@ function finishScan(c){
   ds.sort((a,b)=>a-b);frameStep=ds[ds.length>>1]||1/c.fps;
 }
 
-/* ---------- Уточнение: один проход окрестности, родные кадры ---------- */
+/* ---------- Уточнение ---------- */
 async function refine(list,c){
   const R=Math.min(c.refinePairs,list.length);
   if(!R)return;
@@ -356,7 +477,8 @@ async function findLoop(){
   if(c.maxDur<=c.minDur)return st.textContent='Макс. длительность должна быть больше минимальной.';
   if(c.t1-c.t0<c.minDur)return st.textContent='Диапазон поиска короче минимального лупа.';
   busy=true;cancel=false;$('bCancel').hidden=false;
-  stopLoop();hidePreview();res.innerHTML='';$('bFind').disabled=true;$('bPlay').disabled=true;$('bSave').disabled=true;
+  stopLoop();hidePreview();setCropUI(false);res.innerHTML='';
+  $('bFind').disabled=true;$('bPlay').disabled=true;$('bSave').disabled=true;
   const T0=performance.now();
   try{
     await grabFrames(c);
@@ -414,7 +536,8 @@ async function findLoop(){
     if(cancel)throw new Error('cancel');
     cur=results[0];showResults();
     bar.style.display='none';
-    st.textContent='Готово за '+((performance.now()-T0)/1000).toFixed(1)+' с · '+n+' кадров · совпадение '+((1-cur.score)*100).toFixed(1)+'% · луп '+(cur.b-cur.a).toFixed(2)+' с'+(fallback?' · досканировано после замедления':'');
+    const cr=(cropR.w<0.999||cropR.h<0.999)?' · кроп '+Math.round(cropR.w*100)+'×'+Math.round(cropR.h*100)+'%':'';
+    st.textContent='Готово за '+((performance.now()-T0)/1000).toFixed(1)+' с · '+n+' кадров · совпадение '+((1-cur.score)*100).toFixed(1)+'% · луп '+(cur.b-cur.a).toFixed(2)+' с'+cr+(fallback?' · досканировано после замедления':'');
     $('bPlay').disabled=false;$('bSave').disabled=false;
     if($('auto').checked)await startLoop(false);
   }catch(e){
@@ -436,17 +559,23 @@ function showResults(){
 }
 function markCur(){[...res.children].forEach((el,k)=>el.classList.toggle('on',results[k]===cur));}
 
-/* ---------- Общее для режимов ---------- */
+/* ---------- Общее ---------- */
 function loopEnd(){return cur.b+($('exLast').checked?0:frameStep*.999);}
 function sizeCanvas(){
   const r=v.getBoundingClientRect();
   const dpr=Math.min(window.devicePixelRatio||1,2);
   const W=Math.max(320,Math.min(1280,Math.round(r.width*dpr)));
-  cv.width=W;cv.height=Math.max(180,Math.round(W*r.height/Math.max(1,r.width)));
+  const H=Math.max(180,Math.round(W*r.height/Math.max(1,r.width)));
+  if(cv.width!==W||cv.height!==H){cv.width=W;cv.height=H;} // пересоздаём только при реальном изменении
 }
 function fitDraw(src,sw,sh){
   const cw=cv.width,ch=cv.height,s=Math.min(cw/sw,ch/sh);
   cctx.drawImage(src,(cw-sw*s)/2,(ch-sh*s)/2,sw*s,sh*s);
+}
+function drawRegion(){ // живое видео в canvas-режиме с учётом кропа
+  const {sx,sy,sw,sh}=regionPx();
+  const cw=cv.width,ch=cv.height,s=Math.min(cw/sw,ch/sh);
+  cctx.drawImage(v,sx,sy,sw,sh,(cw-sw*s)/2,(ch-sh*s)/2,sw*s,sh*s);
 }
 function applyRate(){
   const r=Math.min(4,Math.max(.25,+$('spd').value||1));
@@ -457,7 +586,7 @@ function stopDraw(){
   rvId=0;
 }
 
-/* ---------- Превью после загрузки: кадр на canvas (мобильные не рисуют видео до play) ---------- */
+/* ---------- Превью: кадр в буфере, перерисовка при любом resize ---------- */
 function hidePreview(){if(previewOn){previewOn=false;cv.classList.remove('on');}}
 async function waitReady(min,timeout){
   const t0=performance.now();
@@ -467,12 +596,14 @@ async function waitReady(min,timeout){
   }
   return true;
 }
-function drawPreviewFrame(){
+function captureToSnap(){ // полный кадр → буфер превью
   if(!v.videoWidth)return false;
-  sizeCanvas();
-  fitDraw(v,v.videoWidth,v.videoHeight);
+  const w=Math.min(v.videoWidth,1280),h=Math.round(w*v.videoHeight/v.videoWidth);
+  snap.width=w;snap.height=h;
+  snap.getContext('2d').drawImage(v,0,0,w,h);
   return true;
 }
+function drawPreview(){if(snap.width&&snap.height)fitDraw(snap,snap.width,snap.height);}
 function frameIsBlack(){
   const t=document.createElement('canvas');t.width=8;t.height=8;
   const x=t.getContext('2d',{willReadFrequently:true});
@@ -485,39 +616,26 @@ async function showPreview(){
   previewOn=false;
   if(!(await waitReady(1,4000)))return;
   let shown=false;
-  // 1) кадр у начала
-  if(await seekOnce(0.05,1500)){
-    if(await waitReady(2,1500)){
-      if(drawPreviewFrame()&&!frameIsBlack())shown=true;
-    }
+  if(await seekOnce(0.05,1500)&&await waitReady(2,1500)){
+    if(!frameIsBlack()&&captureToSnap())shown=true;
   }
-  // 2) кадр на 10% ролика (если начало чёрное или не декодируется)
-  if(!shown&&v.duration>1){
-    if(await seekOnce(Math.min(v.duration*.1,v.duration-.05),1500)){
-      if(await waitReady(2,1500)){
-        if(drawPreviewFrame()&&!frameIsBlack())shown=true;
-      }
-    }
+  if(!shown&&v.duration>1&&await seekOnce(Math.min(v.duration*.1,v.duration-.05),1500)&&await waitReady(2,1500)){
+    if(!frameIsBlack()&&captureToSnap())shown=true;
   }
-  // 3) приём «проиграть 1 кадр и встать» — работает даже на iOS
-  if(!shown){
+  if(!shown){ // приём «проиграть 1 кадр и встать» — работает даже на iOS
     v.muted=true;v.playbackRate=1;
     try{v.currentTime=0;}catch(e){}
     try{await v.play();}catch(e){}
-    if(hasR){
-      await new Promise(r=>{
-        const t=setTimeout(r,900);
-        v.requestVideoFrameCallback(()=>{clearTimeout(t);r();});
-      });
-    }else await sleep(600);
+    if(hasR)await new Promise(r=>{const t=setTimeout(r,900);v.requestVideoFrameCallback(()=>{clearTimeout(t);r();});});
+    else await sleep(600);
     v.pause();
-    shown=drawPreviewFrame();
+    if(captureToSnap())shown=true;
     try{v.currentTime=0;}catch(e){}
   }
-  if(shown){cv.classList.add('on');previewOn=true;}
+  if(shown){sizeCanvas();drawPreview();cv.classList.add('on');previewOn=true;}
 }
 
-/* ---------- Бесшовный режим: луп как GIF из снятых кадров ---------- */
+/* ---------- Бесшовный режим ---------- */
 let seqCache=[];
 function seqKey(){return cur.a.toFixed(3)+'|'+cur.b.toFixed(3)+'|'+$('exLast').checked;}
 async function prepSequence(){
@@ -526,14 +644,14 @@ async function prepSequence(){
   const key=seqKey();
   if(seqCache.find(s=>s.key===key))return true;
   phase='Подготовка бесшовного лупа';
-  const vw=v.videoWidth||640,vh=v.videoHeight||360;
-  const w=Math.min(vw,1024),h=Math.max(2,Math.round(w*vh/vw));
+  const {sx,sy,sw,sh}=regionPx();
+  const w=Math.min(sw,1024),h=Math.max(2,Math.round(w*sh/sw));
   const cnv=document.createElement('canvas');cnv.width=w;cnv.height=h;
   const cx=cnv.getContext('2d');
   const maxN=360,minInt=Math.max(1/60,D/maxN);
   const fr=[];let cnt=0;
   const ok=await playCapture(A,B,{rate:1,step:minInt,onFrame:t=>{
-    cx.drawImage(v,0,0,w,h);
+    cx.drawImage(v,sx,sy,sw,sh,0,0,w,h);
     fr.push({t,u:cnv.toDataURL('image/jpeg',0.9)});
     if((++cnt%3)===0)fitDraw(cnv,w,h);
     st.textContent='Подготовка бесшовного лупа… '+Math.min(99,Math.round((t-A)/D*100))+'%';
@@ -570,12 +688,12 @@ function seqTick(now){
   seqRAF=requestAnimationFrame(seqTick);
 }
 
-/* ---------- Canvas-режим (быстрый старт) ---------- */
+/* ---------- Canvas-режим ---------- */
 function takeSnap(){
-  const vw=v.videoWidth||640,vh=v.videoHeight||360;
-  const w=Math.min(vw,1280),h=Math.round(w*vh/vw);
+  const {sx,sy,sw,sh}=regionPx();
+  const w=Math.min(sw,1280),h=Math.max(2,Math.round(w*sh/sw));
   snap.width=w;snap.height=h;
-  snap.getContext('2d').drawImage(v,0,0,w,h);
+  snap.getContext('2d').drawImage(v,sx,sy,sw,sh,0,0,w,h);
 }
 function startDraw(){
   stopDraw();
@@ -583,8 +701,8 @@ function startDraw(){
   if(hasR){
     const cb=(now,meta)=>{
       if(!playing)return;
-      if(meta.mediaTime>=B-1e-4||v.ended){cctx.drawImage(snap,0,0,cv.width,cv.height);v.currentTime=cur.a;}
-      else if(v.videoWidth)fitDraw(v,v.videoWidth,v.videoHeight);
+      if(meta.mediaTime>=B-1e-4||v.ended){fitDraw(snap,snap.width,snap.height);v.currentTime=cur.a;}
+      else if(v.videoWidth)drawRegion();
       rvId=v.requestVideoFrameCallback(cb);
     };
     rvId=v.requestVideoFrameCallback(cb);
@@ -592,8 +710,8 @@ function startDraw(){
     const loop=()=>{
       if(!playing)return;
       if(!v.seeking){
-        if(v.currentTime>=B-.004||v.ended){cctx.drawImage(snap,0,0,cv.width,cv.height);v.currentTime=cur.a;}
-        else if(v.videoWidth)fitDraw(v,v.videoWidth,v.videoHeight);
+        if(v.currentTime>=B-.004||v.ended){fitDraw(snap,snap.width,snap.height);v.currentTime=cur.a;}
+        else if(v.videoWidth)drawRegion();
       }
       requestAnimationFrame(loop);
     };
@@ -644,7 +762,7 @@ async function startLoop(resume){
   }else if(mode==='canvas'){
     cv.classList.add('on');sizeCanvas();
     await robustSeek(cur.a,2);
-    takeSnap();cctx.drawImage(snap,0,0,cv.width,cv.height);
+    takeSnap();fitDraw(snap,snap.width,snap.height);
     applyRate();
     v.play().catch(()=>{stopLoop();st.textContent='Браузер запретил воспроизведение — коснитесь видео.';return;});
     startDraw();
@@ -671,9 +789,17 @@ function tick(){
   requestAnimationFrame(tick);
 }
 $('mute').addEventListener('change',()=>{if(playing){v.muted=$('mute').checked;_mute=v.muted;}});
-addEventListener('resize',()=>{if(playing||previewOn)sizeCanvas();});
 
-/* ---------- Экспорт ---------- */
+/* перерисовка при любом изменении размера (скролл/адресная строка/поворот) */
+function onResize(){
+  if(previewOn){sizeCanvas();drawPreview();}
+  else if(playing)sizeCanvas();
+  if(cropOn)layoutCrop();
+}
+if('ResizeObserver' in window)new ResizeObserver(onResize).observe(v);
+addEventListener('resize',onResize);
+
+/* ---------- Экспорт (с учётом кропа) ---------- */
 let actx=null,mediaDst=null;
 function ensureAudio(){
   if(actx)return;
@@ -695,12 +821,12 @@ async function exportLoop(){
   if(!cur||busy)return;
   if(!window.MediaRecorder||!HTMLCanvasElement.prototype.captureStream)
     return st.textContent='Этот браузер не умеет записывать видео — попробуйте Chrome или Firefox.';
-  busy=true;cancel=false;$('bCancel').hidden=false;stopLoop();hidePreview();
+  busy=true;cancel=false;$('bCancel').hidden=false;stopLoop();hidePreview();setCropUI(false);
   const A=cur.a,B=loopEnd(),wantAudio=!$('mute').checked;
   try{
     if(wantAudio){ensureAudio();if(actx)await actx.resume();}
-    const vw=v.videoWidth||640,vh=v.videoHeight||360;
-    const w=Math.min(vw,1920),h=Math.round(w*vh/vw);
+    const {sx,sy,sw,sh}=regionPx();
+    const w=Math.min(sw,1920),h=Math.max(2,Math.round(w*sh/sw));
     const ec=document.createElement('canvas');ec.width=w;ec.height=h;
     const ex=ec.getContext('2d');
     const stream=ec.captureStream(30);
@@ -711,14 +837,14 @@ async function exportLoop(){
     const stopped=new Promise(r=>rec.onstop=r);
     v.muted=!wantAudio;v.playbackRate=1;
     if(!(await robustSeek(A,3)))throw new Error('не удалось перемотаться к началу лупа');
-    ex.drawImage(v,0,0,w,h);
+    ex.drawImage(v,sx,sy,sw,sh,0,0,w,h);
     rec.start(250);
     await v.play();
     await new Promise(fin=>{
       const step=()=>{
         if(cancel)return fin();
         const t=v.currentTime;
-        ex.drawImage(v,0,0,w,h);
+        ex.drawImage(v,sx,sy,sw,sh,0,0,w,h);
         st.textContent='Запись лупа… '+Math.min(100,Math.max(0,Math.round((t-A)/(B-A)*100)))+'%';
         if(t>=B-.002||v.ended)return fin();
         requestAnimationFrame(step);
@@ -747,6 +873,7 @@ async function exportLoop(){
 /* ---------- Загрузка ---------- */
 async function loadBlob(blob){
   stopLoop();hidePreview();results=[];cur=null;res.innerHTML='';seqCache=[];
+  cropR={x:0,y:0,w:1,h:1};setCropUI(false);updateCropInfo();
   $('bPlay').disabled=true;$('bSave').disabled=true;
   st.textContent='Загрузка…';v.classList.remove('has');
   if(url)URL.revokeObjectURL(url);
@@ -761,7 +888,7 @@ async function loadBlob(blob){
   $('t1').placeholder='до конца ('+v.duration.toFixed(1)+'с)';
   $('bFind').disabled=false;
   st.textContent='Загружено: '+v.duration.toFixed(1)+' с · '+(v.videoWidth||'?')+'×'+(v.videoHeight||'?')+' — жмите «Найти луп».';
-  try{await showPreview();}catch(e){} // превью не должно ломать загрузку
+  try{await showPreview();}catch(e){}
 }
 $('bFile').onclick=()=>$('file').click();
 $('file').onchange=e=>{const f=e.target.files[0];if(f)loadBlob(f);};
@@ -771,11 +898,11 @@ $('bCancel').onclick=()=>{cancel=true;};
 $('bPlay').onclick=()=>startLoop(true);
 $('bPause').onclick=pauseLoop;
 $('bSave').onclick=exportLoop;
-v.onclick=()=>{if(cur&&!busy&&!prep)playing?pauseLoop():startLoop(true);};
+v.onclick=()=>{if(cur&&!busy&&!prep&&!cropOn)playing?pauseLoop():startLoop(true);};
 addEventListener('keydown',e=>{
   if(e.code!=='Space'||!cur||busy||prep||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;
   e.preventDefault();playing?pauseLoop():startLoop(true);
 });
 </script>
 </body>
-  </html>
+</html>
