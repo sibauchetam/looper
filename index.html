@@ -16,7 +16,7 @@ video{width:100%;max-height:44vh;background:#000;border-radius:4px;display:block
 video:not(.has){min-height:140px;border:1px dashed var(--line);background:var(--card)}
 #cv{position:absolute;inset:0;width:100%;height:100%;border-radius:4px;display:none;pointer-events:none;background:#000}
 #cv.on{display:block}
-#cropOv{position:absolute;display:none;touch-action:none;z-index:6;user-select:none;-webkit-user-select:none}
+#cropOv{position:absolute;inset:0;display:none;touch-action:none;z-index:6;user-select:none;-webkit-user-select:none}
 #cropOv.on{display:block}
 #cropBox{position:absolute;border:1px solid #fff;box-shadow:0 0 0 9999px rgba(0,0,0,.45);cursor:move}
 #cropBox i{position:absolute;width:14px;height:14px;background:#fff;border:1px solid #000;border-radius:2px}
@@ -52,7 +52,6 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#fff}
 #bar{height:3px;background:var(--line);border-radius:2px;overflow:hidden;margin:10px 0;display:none}
 #bar i{display:block;height:100%;width:0;background:#fff}
 #status{color:var(--mut);font-size:13px;min-height:19px;word-break:break-word}
-#status a{color:#fff}
 .res{display:flex;justify-content:space-between;gap:8px;padding:8px 11px;border:1px solid var(--line);border-radius:3px;margin:5px 0;cursor:pointer;background:var(--card);font-variant-numeric:tabular-nums;font-size:13.5px}
 .res b{color:var(--ok)}
 .res.on{border-color:#fff;border-left-width:3px}
@@ -63,140 +62,129 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#fff}
 <body>
 <h1>Loop Finder</h1>
 <p class="sub">Поиск лупа в видеофайле — обработка локально, без загрузки в сеть.</p>
-
 <input type="file" id="file" accept="video/*" hidden>
 <div class="vwrap">
-  <video id="v" playsinline webkit-playsinline muted preload="auto"></video>
-  <canvas id="cv"></canvas>
-  <div id="cropOv">
-    <div id="cropBox">
-      <i class="h-tl" data-c="tl"></i><i class="h-tr" data-c="tr"></i>
-      <i class="h-bl" data-c="bl"></i><i class="h-br" data-c="br"></i>
-    </div>
-  </div>
+<video id="v" playsinline webkit-playsinline muted preload="auto"></video>
+<canvas id="cv"></canvas>
+<div id="cropOv"><div id="cropBox"><i class="h-tl" data-c="tl"></i><i class="h-tr" data-c="tr"></i><i class="h-bl" data-c="bl"></i><i class="h-br" data-c="br"></i></div></div>
 </div>
-
 <div class="row">
-  <button class="pri" id="bFile">Файл…</button>
-  <button id="bFind" disabled>Найти луп</button>
-  <button id="bCancel" hidden>Отмена</button>
-  <button id="bPlay" disabled>Пуск</button>
-  <button id="bPause" disabled>Пауза</button>
-  <button id="bSave" disabled>Скачать</button>
-  <button id="bGif" disabled>GIF</button>
-  <button id="bStk" disabled>Стикер</button>
+<button class="pri" id="bFile">Файл…</button>
+<button id="bFind" disabled>Найти луп</button>
+<button id="bCancel" hidden>Отмена</button>
+<button id="bPlay" disabled>Пуск</button>
+<button id="bPause" disabled>Пауза</button>
+<button id="bSave" disabled>Скачать</button>
+<button id="bGif" disabled>GIF</button>
+<button id="bStk" disabled>Стикер</button>
 </div>
 <div id="bar"><i></i></div>
 <div id="status">Выберите, перетащите видеофайл или вставьте из буфера (Ctrl+V).</div>
 <div id="res"></div>
-
 <details>
 <summary>Настройки</summary>
-<div class="row presets">
-  <button data-p="fast">Быстро</button>
-  <button data-p="bal">Баланс</button>
-  <button data-p="acc">Точно</button>
-</div>
-
+<div class="row presets"><button data-p="fast">Быстро</button><button data-p="bal">Баланс</button><button data-p="acc">Точно</button></div>
 <details open>
-  <summary>Длительность лупа</summary>
-  <div class="s" style="margin-top:10px"><label>Диапазон <output id="durOut"></output></label></div>
-  <div class="dual">
-    <div class="track"><i id="fill"></i></div>
-    <input type="range" id="minDur" min="0.1" max="30" step="0.1" value="1.6" aria-label="Мин. длительность">
-    <input type="range" id="maxDur" min="0.1" max="30" step="0.1" value="2.6" aria-label="Макс. длительность">
-  </div>
-  <p class="hint">Шкала подстраивается под длительность загруженного видео.</p>
-  <div class="grid">
-    <div><label>Начало поиска, с</label><input type="number" id="t0" value="0" min="0" step="0.5"></div>
-    <div><label>Конец, с (пусто — до конца)</label><input type="number" id="t1"></div>
-    <div class="s"><label>Показать лупов <output id="topNOut"></output></label><input type="range" id="topN" min="1" max="20" step="1" value="5"></div>
-  </div>
+<summary>Длительность лупа</summary>
+<div class="s" style="margin-top:10px"><label>Диапазон <output id="durOut"></output></label></div>
+<div class="dual"><div class="track"><i id="fill"></i></div>
+<input type="range" id="minDur" min="0.1" max="30" step="0.1" value="1.6" aria-label="Мин">
+<input type="range" id="maxDur" min="0.1" max="30" step="0.1" value="2.6" aria-label="Макс"></div>
+<p class="hint">Шкала подстраивается под длину видео.</p>
+<div class="grid">
+<div><label>Начало поиска, с</label><input type="number" id="t0" value="0" min="0" step="0.5"></div>
+<div><label>Конец, с (пусто — до конца)</label><input type="number" id="t1"></div>
+<div class="s"><label>Показать лупов <output id="topNOut"></output></label><input type="range" id="topN" min="1" max="20" step="1" value="5"></div>
+</div>
 </details>
-
 <details>
-  <summary>Кадрирование — область поиска и экспорта</summary>
-  <div class="row">
-    <button id="bCrop">Область…</button>
-    <button id="bSq">1:1</button>
-    <button id="bCr">Сброс</button>
-  </div>
-  <div id="cropInfo" class="hint">Область: весь кадр (кроп выключен)</div>
-  <p class="hint">Тяните рамку за уголки, двигайте за центр. Действует на поиск, превью и все виды экспорта. При выборе области луп ставится на паузу.</p>
+<summary>Кадрирование — область поиска и экспорта</summary>
+<div class="row"><button id="bCrop">Область…</button><button id="bSq">1:1</button><button id="bCr">Сброс</button></div>
+<div id="cropInfo" class="hint">Область: весь кадр (кроп выключен)</div>
+<p class="hint">Тяните рамку за уголки, двигайте за центр. Действует на поиск, превью и экспорт. При выборе области луп ставится на паузу.</p>
 </details>
-
 <details>
-  <summary>Точность и скорость поиска</summary>
-  <div class="grid">
-    <div class="s"><label>Частота анализа <output id="fpsOut"></output></label><input type="range" id="fps" min="2" max="30" step="1" value="15"></div>
-    <div class="s"><label>Точность сравнения <output id="sizeOut"></output></label><input type="range" id="size" min="16" max="64" step="8" value="32"></div>
-    <div class="s"><label>Непрерывность движения <output id="motionOut"></output></label><input type="range" id="motion" min="0" max="100" step="5" value="30"></div>
-    <div class="s"><label>Мин. совпадение <output id="minMatchOut"></output></label><input type="range" id="minMatch" min="0" max="100" step="5" value="0"></div>
-    <div class="s"><label>Скрывать перекрывающиеся <output id="diffThrOut"></output></label><input type="range" id="diffThr" min="0" max="100" step="5" value="60"></div>
-  </div>
-  <div class="grid">
-    <label class="chk"><input type="checkbox" id="color"> Цветное сравнение (медленнее)</label>
-    <label class="chk"><input type="checkbox" id="fromStart"> Луп только от начала поиска</label>
-  </div>
-  <p class="hint">«Непрерывность движения» сравнивает скорость кадров на стыке лупа: маятник на полупериоде выглядит одинаково, но дёргается на границе — эта настройка его отсеивает.</p>
+<summary>Точность и скорость поиска</summary>
+<div class="grid">
+<div class="s"><label>Частота анализа <output id="fpsOut"></output></label><input type="range" id="fps" min="2" max="30" step="1" value="15"></div>
+<div class="s"><label>Точность сравнения <output id="sizeOut"></output></label><input type="range" id="size" min="16" max="64" step="8" value="32"></div>
+<div class="s"><label>Непрерывность движения <output id="motionOut"></output></label><input type="range" id="motion" min="0" max="100" step="5" value="30"></div>
+<div class="s"><label>Мин. совпадение <output id="minMatchOut"></output></label><input type="range" id="minMatch" min="0" max="100" step="5" value="0"></div>
+<div class="s"><label>Скрывать перекрывающиеся <output id="diffThrOut"></output></label><input type="range" id="diffThr" min="0" max="100" step="5" value="60"></div>
+</div>
+<div class="grid">
+<label class="chk"><input type="checkbox" id="color"> Цветное сравнение (медленнее)</label>
+<label class="chk"><input type="checkbox" id="fromStart"> Луп только от начала поиска</label>
+</div>
+<p class="hint">«Непрерывность движения» сравнивает скорость кадров на стыке лупа: маятник на полупериоде выглядит одинаково, но дёргается на границе — настройка его отсеивает.</p>
 </details>
-
 <details>
-  <summary>Уточнение границ — 2-й проход</summary>
-  <div class="grid">
-    <div class="s"><label>Уточнять пар <output id="refinePairsOut"></output></label><input type="range" id="refinePairs" min="0" max="10" step="1" value="3"></div>
-    <div class="s"><label>Радиус уточнения <output id="refineRadiusOut"></output></label><input type="range" id="refineRadius" min="0.5" max="3" step="0.5" value="1.5"></div>
-  </div>
+<summary>Уточнение границ — 2-й проход</summary>
+<div class="grid">
+<div class="s"><label>Уточнять пар <output id="refinePairsOut"></output></label><input type="range" id="refinePairs" min="0" max="10" step="1" value="3"></div>
+<div class="s"><label>Радиус уточнения <output id="refineRadiusOut"></output></label><input type="range" id="refineRadius" min="0.5" max="3" step="0.5" value="1.5"></div>
+</div>
 </details>
-
 <details>
-  <summary>Захват, луп и экспорт</summary>
-  <div class="grid">
-    <div><label>Режим лупа</label><select id="loopMode">
-      <option value="seam" selected>Бесшовный — без подлагиваний</option>
-      <option value="canvas">Canvas — быстрый старт</option>
-      <option value="video">Видео — простой</option>
-    </select></div>
-    <div class="s"><label>Ускорение захвата <output id="rateOut"></output></label><input type="range" id="rate" min="1" max="16" step="1" value="8"></div>
-    <div class="s"><label>Скорость лупа <output id="spdOut"></output></label><input type="range" id="spd" min="0.25" max="4" step="0.25" value="1"></div>
-  </div>
-  <div class="grid">
-    <label class="chk"><input type="checkbox" id="fast" checked> Ускоренный захват (иначе — реальное время)</label>
-    <label class="chk"><input type="checkbox" id="exLast" checked> Последний кадр не входит в луп</label>
-    <label class="chk"><input type="checkbox" id="mute" checked> Без звука</label>
-    <label class="chk"><input type="checkbox" id="auto" checked> Автостарт лупа</label>
-  </div>
-  <p class="hint">«Скачать» — webm/mp4 в реальном времени. «GIF» — до 480 px, ~15 к/с, до 90 кадров, со своим энкодером. «Стикер» — формат Telegram: VP9 webm, 512 px, до 3 с (длинные лупы ускоряются), 30 к/с, без звука, битрейт подбирается под 256 КБ; готовый файл отправьте боту @Stickers (/newpack). При активном кропе видеорежим лупа автоматически заменяется canvas-режимом.</p>
+<summary>Захват, луп и экспорт</summary>
+<div class="grid">
+<div><label>Режим лупа</label><select id="loopMode">
+<option value="seam" selected>Бесшовный — без подлагиваний</option>
+<option value="canvas">Canvas — быстрый старт</option>
+<option value="video">Видео — простой</option>
+</select></div>
+<div class="s"><label>Ускорение захвата <output id="rateOut"></output></label><input type="range" id="rate" min="1" max="16" step="1" value="8"></div>
+<div class="s"><label>Скорость лупа <output id="spdOut"></output></label><input type="range" id="spd" min="0.25" max="4" step="0.25" value="1"></div>
+</div>
+<div class="grid">
+<label class="chk"><input type="checkbox" id="fast" checked> Ускоренный захват (иначе — реальное время)</label>
+<label class="chk"><input type="checkbox" id="exLast" checked> Последний кадр не входит в луп</label>
+<label class="chk"><input type="checkbox" id="mute" checked> Без звука</label>
+<label class="chk"><input type="checkbox" id="auto" checked> Автостарт лупа</label>
+</div>
+<p class="hint">«Скачать» — webm/mp4 в реальном времени. «GIF» — до 480 px, ~15 к/с, до 90 кадров. «Стикер» — Telegram: VP9 webm, 512 px, до 3 с (длинные лупы ускоряются), без звука, ≤256 КБ; файл отправьте боту @Stickers (/newpack). При кропе видеорежим лупа заменяется canvas.</p>
 </details>
-<p class="hint">Вкладку можно сворачивать — поиск встанет на паузу и продолжится с того же места. Ctrl+C копирует таймкоды выбранного лупа, Ctrl+V вставляет видео из буфера.</p>
+<p class="hint">Вкладку можно сворачивать — поиск встанет на паузу и продолжится. Ctrl+V вставляет видео из буфера.</p>
 </details>
-
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
+const NEED=['v','cv','cropOv','cropBox','file','bFile','bFind','bCancel','bPlay','bPause','bSave','bGif','bStk','bar','status','res','minDur','maxDur','durOut','fill','t0','t1','topN','topNOut','fps','fpsOut','size','sizeOut','motion','motionOut','minMatch','minMatchOut','diffThr','diffThrOut','color','fromStart','refinePairs','refinePairsOut','refineRadius','refineRadiusOut','loopMode','rate','rateOut','spd','spdOut','fast','exLast','mute','auto','bCrop','bSq','bCr','cropInfo'];
+{
+  const miss=NEED.filter(id=>!$(id));
+  if(miss.length){
+    $('status').textContent='Файл собран из разных версий: нет элементов '+miss.join(', ')+'. Замените loop.html целиком (6 частей).';
+    throw new Error('template mismatch: '+miss.join(','));
+  }
+}
 const v=$('v'),cv=$('cv'),cctx=cv.getContext('2d'),st=$('status'),bar=$('bar'),barI=bar.firstElementChild,res=$('res');
 const cropOv=$('cropOv'),cropBox=$('cropBox');
 const hasR='requestVideoFrameCallback' in HTMLVideoElement.prototype;
-let frames=[],times=[],frameStep=1/15,results=[],cur=null,playing=false,busy=false,prep=false,cancel=false,url=null,fallback=false;
-let _rate=-1,_mute=null,rvId=0,phase='',previewOn=false;
+let frames=[],times=[],frameStep=1/15,results=[],cur=null,playing=false,busy=false,prep=false,cancel=false,url=null,fname='';
+let _rate=1,phase='',previewOn=false,previewTok=0,durMax=30;
 let cropR={x:0,y:0,w:1,h:1},cropOn=false,dragC=null,cropWasPlaying=false;
+let seqCache=[],seqKeyCur='',seqRAF=0,loopCleanup=null,audioGraph=null;
 const snap=document.createElement('canvas');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const raf=()=>new Promise(r=>requestAnimationFrame(r));
 const cropActive=()=>cropR.w<0.999||cropR.h<0.999;
-
+window.addEventListener('error',e=>{try{st.textContent='Ошибка: '+(e.message||'неизвестная');}catch(_){}});
 function bind(id,fmt){const el=$(id),out=$(id+'Out');const u=()=>out.textContent=fmt(+el.value);el.addEventListener('input',u);u();}
 function setV(id,val){const el=$(id);el.value=val;el.dispatchEvent(new Event('input'));}
-bind('topN',x=>''+x);
-bind('fps',x=>x+' к/с');bind('size',x=>x+' px');
-bind('motion',x=>x===0?'выкл':x+' %');
-bind('minMatch',x=>x===0?'выкл':x+' %');bind('diffThr',x=>x+' %');
-bind('refinePairs',x=>x===0?'выкл':'топ '+x);bind('refineRadius',x=>x+' шага');
-bind('rate',x=>'×'+x);bind('spd',x=>'×'+x);
+bind('topN',x=>''+x);bind('fps',x=>x+' к/с');bind('size',x=>x+' px');
+bind('motion',x=>x===0?'выкл':x+' %');bind('minMatch',x=>x===0?'выкл':x+' %');
+bind('diffThr',x=>x+' %');bind('refinePairs',x=>x===0?'выкл':'топ '+x);
+bind('refineRadius',x=>x+' шага');bind('rate',x=>'×'+x);bind('spd',x=>'×'+x);
 if(matchMedia('(pointer:coarse)').matches)setV('rate',4);
-
-/* слайдер с двумя головками, шкала = длительность видео */
-let durMax=30;
+const PRESETS={
+  fast:{fps:8,size:24,motion:0,minMatch:0,diffThr:50,refinePairs:0,refineRadius:1,color:false,fromStart:false},
+  bal:{fps:15,size:32,motion:30,minMatch:0,diffThr:60,refinePairs:3,refineRadius:1.5,color:false,fromStart:false},
+  acc:{fps:24,size:48,motion:50,minMatch:40,diffThr:70,refinePairs:6,refineRadius:2.5,color:true,fromStart:false}
+};
+document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{
+  const p=PRESETS[b.dataset.p];
+  for(const k in p){const el=$(k);if(el&&el.type==='checkbox')el.checked=!!p[k];else if(el)setV(k,p[k]);}
+});
 const fill=$('fill');
 function dualSync(push){
   let mn=+$('minDur').value,mx=+$('maxDur').value;
@@ -204,1008 +192,763 @@ function dualSync(push){
     if(push==='min'){mx=Math.min(durMax,mn+0.1);$('maxDur').value=mx;}
     else{mn=Math.max(0.1,mx-0.1);$('minDur').value=mn;}
   }
-  const f=x=>(x-0.1)/(durMax-0.1),a=f(mn),b=f(mx);
+  const f=x=>(x-0.1)/(durMax-0.1),a=f(mn),b2=f(mx);
   fill.style.left='calc(11px + (100% - 22px)*'+a.toFixed(4)+')';
-  fill.style.width='calc((100% - 22px)*'+(b-a).toFixed(4)+')';
+  fill.style.width='calc((100% - 22px)*'+(b2-a).toFixed(4)+')';
   $('durOut').textContent=mn.toFixed(1)+' – '+mx.toFixed(1)+' с';
 }
 function setDurMax(m){
+  if(!isFinite(m)||m<=0)m=30;
   durMax=Math.max(0.2,Math.min(30,Math.round(m*10)/10));
   $('minDur').max=durMax;$('maxDur').max=durMax;
   let mn=+$('minDur').value,mx=+$('maxDur').value;
-  mx=Math.min(mx,durMax);mn=Math.min(mn,+(Math.max(0.1,durMax-0.1).toFixed(1)));
+  mx=Math.min(mx,durMax);mn=Math.min(mn,Math.max(0.1,durMax-0.1));
   if(mx-mn<0.1)mx=Math.min(durMax,mn+0.1);
-  $('minDur').value=mn;$('maxDur').value=mx;
-  dualSync();
+  $('minDur').value=mn;$('maxDur').value=mx;dualSync();
 }
 $('minDur').addEventListener('input',()=>dualSync('min'));
 $('maxDur').addEventListener('input',()=>dualSync('max'));
 dualSync();
-
-const PRESETS={
-  fast:{fps:10,size:24,refinePairs:0},
-  bal:{fps:15,size:32,refinePairs:3,refineRadius:1.5},
-  acc:{fps:25,size:48,refinePairs:6,refineRadius:2.5}
+const cfg=()=>{
+  const D=(isFinite(v.duration)&&v.duration>0)?v.duration:1e9;
+  const t1v=$('t1').value;
+  return{
+    minDur:Math.max(.05,parseFloat($('minDur').value)||.1),
+    maxDur:Math.max(.1,parseFloat($('maxDur').value)||.2),
+    t0:Math.max(0,+$('t0').value||0),
+    t1:t1v===''?D:(isFinite(+t1v)?Math.min(+t1v,D):D),
+    fps:Math.min(30,Math.max(2,Math.round(+$('fps').value))),
+    size:Math.round(+$('size').value),
+    topN:Math.min(20,Math.max(1,Math.round(+$('topN').value))),
+    minMatch:Math.max(0,+$('minMatch').value)/100,
+    diffThr:Math.min(100,Math.max(0,+$('diffThr').value))/100,
+    refinePairs:Math.max(0,Math.round(+$('refinePairs').value)),
+    refineRadius:Math.max(.5,+$('refineRadius').value),
+    rate:Math.min(16,Math.max(1,Math.round(+$('rate').value))),
+    motion:Math.min(1,Math.max(0,(+$('motion').value||0)/100)),
+    crop:cropR,color:$('color').checked,fast:$('fast').checked,fromStart:$('fromStart').checked
+  };
 };
-document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{for(const k in PRESETS[b.dataset.p])setV(k,PRESETS[b.dataset.p][k]);});
-
-const cfg=()=>({
-  minDur:Math.max(.05,parseFloat($('minDur').value)||.1),
-  maxDur:Math.max(.1,parseFloat($('maxDur').value)||.2),
-  t0:Math.max(0,+$('t0').value||0),
-  t1:$('t1').value===''?v.duration:(isFinite(+$('t1').value)?Math.min(+$('t1').value,v.duration):v.duration),
-  fps:Math.min(30,Math.max(2,Math.round(+$('fps').value))),
-  size:Math.round(+$('size').value),
-  topN:Math.min(20,Math.max(1,Math.round(+$('topN').value))),
-  minMatch:Math.max(0,+$('minMatch').value),
-  diffThr:Math.min(100,Math.max(0,+$('diffThr').value)),
-  refinePairs:Math.max(0,Math.round(+$('refinePairs').value)),
-  refineRadius:Math.max(.5,+$('refineRadius').value),
-  rate:Math.min(16,Math.max(1,Math.round(+$('rate').value))),
-  motion:Math.min(1,Math.max(0,(+$('motion').value||0)/100)),
-  crop:cropR,
-  color:$('color').checked,fast:$('fast').checked,fromStart:$('fromStart').checked
-});
 function prog(i,n){
-  const p=Math.min(100,Math.round(i/Math.max(1,n)*100));
+  n=(isFinite(n)&&n>0)?n:1;
+  const p=Math.min(100,Math.round(i/n*100));
   bar.style.display='block';barI.style.width=p+'%';
   st.textContent=phase+'… '+p+'%';
 }
-
-/* кроп */
 function regionPx(){
   const vw=v.videoWidth||640,vh=v.videoHeight||360;
-  return{sx:vw*cropR.x,sy:vh*cropR.y,sw:Math.max(2,vw*cropR.w),sh:Math.max(2,vh*cropR.h)};
-}
-function contentRect(){
-  const r=v.getBoundingClientRect();
-  const va=(v.videoWidth||16)/(v.videoHeight||9);
-  let cw=r.width,ch=r.width/va;
-  if(ch>r.height){ch=r.height;cw=r.height*va;}
-  return{x:(r.width-cw)/2,y:(r.height-ch)/2,w:cw,h:ch};
-}
-function applyCropBox(){
-  cropBox.style.left=(cropR.x*100)+'%';cropBox.style.top=(cropR.y*100)+'%';
-  cropBox.style.width=(cropR.w*100)+'%';cropBox.style.height=(cropR.h*100)+'%';
+  let sx=Math.round(cropR.x*vw),sy=Math.round(cropR.y*vh);
+  let sw=Math.round(cropR.w*vw),sh=Math.round(cropR.h*vh);
+  sx=Math.max(0,Math.min(vw-8,sx));sy=Math.max(0,Math.min(vh-8,sy));
+  sw=Math.max(8,Math.min(vw-sx,sw));sh=Math.max(8,Math.min(vh-sy,sh));
+  return{sx,sy,sw,sh};
 }
 function layoutCrop(){
-  const c=contentRect();
-  cropOv.style.left=c.x+'px';cropOv.style.top=c.y+'px';
-  cropOv.style.width=c.w+'px';cropOv.style.height=c.h+'px';
-  applyCropBox();
-}
-function clampRect(x1,y1,x2,y2){
-  if(x2<x1)[x1,x2]=[x2,x1];
-  if(y2<y1)[y1,y2]=[y2,y1];
-  const m=.05;
-  x1=Math.max(0,Math.min(x1,1-m));x2=Math.max(x1+m,Math.min(x2,1));
-  y1=Math.max(0,Math.min(y1,1-m));y2=Math.max(y1+m,Math.min(y2,1));
-  return{x:x1,y:y1,w:x2-x1,h:y2-y1};
-}
-function squareCrop(){
-  const vw=v.videoWidth||640,vh=v.videoHeight||360;
-  const cx=(cropR.x+cropR.w/2)*vw,cy=(cropR.y+cropR.h/2)*vh;
-  let s=Math.min(cropR.w*vw,cropR.h*vh);
-  if(cropR.w>0.999&&cropR.h>0.999)s=Math.min(vw,vh);
-  s=Math.min(s,2*cx,2*cy,2*(vw-cx),2*(vh-cy));
-  cropR={x:(cx-s/2)/vw,y:(cy-s/2)/vh,w:s/vw,h:s/vh};
+  const r=cropOv.getBoundingClientRect();
+  const W=Math.max(1,r.width),H=Math.max(1,r.height);
+  cropBox.style.left=(cropR.x*W)+'px';cropBox.style.top=(cropR.y*H)+'px';
+  cropBox.style.width=(cropR.w*W)+'px';cropBox.style.height=(cropR.h*H)+'px';
 }
 function updateCropInfo(){
-  const full=cropR.w>0.999&&cropR.h>0.999;
-  $('cropInfo').textContent=full
-    ?'Область: весь кадр (кроп выключен)'
-    :'Область: '+Math.round(cropR.w*100)+'×'+Math.round(cropR.h*100)+'% — действует на поиск, превью и экспорт';
+  const el=$('cropInfo');
+  if(!cropActive()){el.textContent='Область: весь кадр (кроп выключен)';return;}
+  const vw=v.videoWidth||0,vh=v.videoHeight||0;
+  el.textContent='Область: '+Math.round(cropR.w*vw)+'×'+Math.round(cropR.h*vh)+' px из '+vw+'×'+vh+' — действует на поиск, превью и экспорт';
 }
 function setCropUI(on){
   cropOn=on;
   cropOv.classList.toggle('on',on);
-  $('bCrop').textContent=on?'Готово':'Область…';
-  if(on)layoutCrop();
-}
-function enterCrop(){ // пауза лупа и статичный кадр (начало лупа)
-  if(playing){cropWasPlaying=true;pauseLoop();}
-  cv.classList.remove('on');previewOn=false;
-  if(cur&&!busy&&!prep)robustSeek(cur.a,1);
-}
-function exitCrop(){
-  setCropUI(false);
-  if(cropWasPlaying){cropWasPlaying=false;if(cur&&!busy&&!prep)startLoop(true);}
-}
-cropOv.addEventListener('pointerdown',e=>{
-  if(!v.videoWidth)return;
-  const c=contentRect(),vr=v.getBoundingClientRect();
-  const px=(e.clientX-vr.left-c.x)/c.w,py=(e.clientY-vr.top-c.y)/c.h;
-  const corner=e.target.dataset?e.target.dataset.c:null;
-  if(corner)dragC={corner,start:{...cropR}};
-  else if(e.target===cropBox)dragC={move:true,ox:px-cropR.x,oy:py-cropR.y};
-  else return;
-  e.preventDefault();
-  cropOv.setPointerCapture(e.pointerId);
-});
-cropOv.addEventListener('pointermove',e=>{
-  if(!dragC)return;
-  const c=contentRect(),vr=v.getBoundingClientRect();
-  const px=Math.min(1,Math.max(0,(e.clientX-vr.left-c.x)/c.w));
-  const py=Math.min(1,Math.max(0,(e.clientY-vr.top-c.y)/c.h));
-  if(dragC.corner){
-    const s=dragC.start;
-    let x1=s.x,y1=s.y,x2=s.x+s.w,y2=s.y+s.h;
-    if(dragC.corner.includes('l'))x1=px;else x2=px;
-    if(dragC.corner.includes('t'))y1=py;else y2=py;
-    cropR=clampRect(x1,y1,x2,y2);
+  if(on){
+    cropWasPlaying=playing;
+    if(playing)pauseLoop();
+    layoutCrop();
+    st.textContent='Выберите область: тяните рамку за уголки, двигайте за центр.';
   }else{
-    cropR.x=Math.min(1-cropR.w,Math.max(0,px-dragC.ox));
-    cropR.y=Math.min(1-cropR.h,Math.max(0,py-dragC.oy));
+    if(cropWasPlaying&&!busy&&!prep&&!cancel)startLoop();
+    cropWasPlaying=false;
+    st.textContent=fname?fName():'Выберите, перетащите видеофайл или вставьте из буфера (Ctrl+V).';
   }
-  applyCropBox();updateCropInfo();
-});
-const endDrag=()=>{if(dragC){dragC=null;updateCropInfo();}};
-cropOv.addEventListener('pointerup',endDrag);
-cropOv.addEventListener('pointercancel',endDrag);
-$('bCrop').onclick=()=>{
-  if(!v.videoWidth){st.textContent='Сначала загрузите видео.';return;}
-  if(cropOn)exitCrop();
-  else{enterCrop();setCropUI(true);}
-};
+  updateCropInfo();
+}
+function fName(){return fname+' · '+(isFinite(v.duration)?v.duration.toFixed(1):'?')+' с · '+(v.videoWidth||0)+'×'+(v.videoHeight||0);}
+function cropBlock(){if(busy||prep){st.textContent='Дождитесь окончания операции — кроп сейчас заблокирован.';return true;}return false;}
+$('bCrop').onclick=()=>{if(cropBlock())return;setCropUI(!cropOn);};
 $('bSq').onclick=()=>{
-  if(!v.videoWidth){st.textContent='Сначала загрузите видео.';return;}
-  squareCrop();
-  if(!cropOn){enterCrop();setCropUI(true);}else applyCropBox();
-  updateCropInfo();
+  if(cropBlock())return;
+  if(!cropOn)setCropUI(true);
+  const s=Math.min(1,Math.max(cropR.w,cropR.h));
+  cropR.x=Math.min(1-s,Math.max(0,cropR.x+(cropR.w-s)/2));
+  cropR.y=Math.min(1-s,Math.max(0,cropR.y+(cropR.h-s)/2));
+  cropR={x:cropR.x,y:cropR.y,w:s,h:s};
+  layoutCrop();updateCropInfo();
 };
-$('bCr').onclick=()=>{
-  cropR={x:0,y:0,w:1,h:1};
-  if(cropOn)applyCropBox();
-  updateCropInfo();
-};
+$('bCr').onclick=()=>{if(cropBlock())return;cropR={x:0,y:0,w:1,h:1};if(cropOn)setCropUI(false);updateCropInfo();};
+function cropPt(e){
+  const r=cropOv.getBoundingClientRect();
+  return{x:Math.min(1,Math.max(0,(e.clientX-r.left)/Math.max(1,r.width))),
+         y:Math.min(1,Math.max(0,(e.clientY-r.top)/Math.max(1,r.height)))};
+}
+cropBox.addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  dragC=e.target.dataset.c?{mode:'rs',c:e.target.dataset.c,p:cropPt(e),o:{...cropR}}
+                         :{mode:'mv',p:cropPt(e),o:{...cropR}};
+  try{cropBox.setPointerCapture(e.pointerId);}catch(_){}
+});
+cropBox.addEventListener('pointermove',e=>{
+  if(!dragC)return;
+  const p=cropPt(e),dx=p.x-dragC.p.x,dy=p.y-dragC.p.y,o=dragC.o;
+  if(dragC.mode==='mv'){
+    cropR={x:Math.min(1-o.w,Math.max(0,o.x+dx)),y:Math.min(1-o.h,Math.max(0,o.y+dy)),w:o.w,h:o.h};
+  }else{
+    let x=o.x,y=o.y,w=o.w,h=o.h;
+    if(dragC.c.indexOf('l')>=0){x=Math.min(o.x+o.w-.05,Math.max(0,o.x+dx));w=o.x+o.w-x;}
+    if(dragC.c.indexOf('r')>=0){w=Math.min(1-o.x,Math.max(.05,o.w+dx));}
+    if(dragC.c.indexOf('t')>=0){y=Math.min(o.y+o.h-.05,Math.max(0,o.y+dy));h=o.y+o.h-y;}
+    if(dragC.c.indexOf('b')>=0){h=Math.min(1-o.y,Math.max(.05,o.h+dy));}
+    cropR={x,y,w,h};
+  }
+  layoutCrop();updateCropInfo();
+});
+['pointerup','pointercancel'].forEach(ev=>cropBox.addEventListener(ev,()=>{dragC=null;}));
 
-/* надёжный seek */
-function seekOnce(t,timeout){return new Promise(r=>{
-  const target=Math.min(Math.max(t,0),(v.duration||1)-.001);
-  if(!v.seeking&&Math.abs(v.currentTime-target)<.005)return r(true);
-  let done=false;const t0=performance.now();
-  const finish=ok=>{if(done)return;done=true;clearInterval(pol);v.removeEventListener('seeked',on);r(ok);};
-  const on=()=>{if(!v.seeking)finish(true);};
-  v.addEventListener('seeked',on);
-  const pol=setInterval(()=>{
-    if(done)return;
-    if(!v.seeking&&Math.abs(v.currentTime-target)<.05)finish(true);
-    else if(performance.now()-t0>(timeout||2500))finish(false);
-  },120);
-  try{v.currentTime=target;}catch(e){finish(false);}
-});}
+/* seek */
+function seekOnce(t,timeout){
+  return new Promise(r=>{
+    if(!isFinite(t)){r(false);return;}
+    const D=isFinite(v.duration)?v.duration:0;
+    t=Math.max(0,Math.min(Math.max(0,D-0.01),t));
+    let done=false;
+    const ok=()=>{if(!done){done=true;clearTimeout(to);v.removeEventListener('seeked',ok);r(true);}};
+    const to=setTimeout(()=>{if(!done){done=true;v.removeEventListener('seeked',ok);r(false);}},timeout||1500);
+    v.addEventListener('seeked',ok,{once:true});
+    try{v.currentTime=t;}catch(e){ok();}
+    if(Math.abs(v.currentTime-t)<0.001&&v.readyState>=2)ok();
+  });
+}
 async function robustSeek(t,tries){
-  for(let k=0;k<(tries||3);k++){
+  for(let i=0;i<(tries||3);i++){
     if(cancel)return false;
-    v.pause();
-    if(await seekOnce(t,2500))return true;
-    await sleep(300);
-    try{v.currentTime=Math.max(0,t-.05);}catch(e){}
+    if(await seekOnce(t,1200+i*500))return true;
     await sleep(150);
   }
   return false;
 }
 
-function makeCtx(c){const cnv=document.createElement('canvas');cnv.width=c.size;cnv.height=c.size;return cnv.getContext('2d',{willReadFrequently:true});}
-function drawV(ctx,c){
-  const {sx,sy,sw,sh}=regionPx();
-  ctx.drawImage(v,sx,sy,sw,sh,0,0,c.size,c.size);
-}
-function pixels(ctx,c){
-  const d=ctx.getImageData(0,0,c.size,c.size).data,n=c.size*c.size,a=new Uint8Array(n*(c.color?3:1));
-  if(c.color)for(let i=0,j=0;i<n;i++){const p=i*4;a[j++]=d[p];a[j++]=d[p+1];a[j++]=d[p+2];}
-  else for(let i=0;i<n;i++){const p=i*4;a[i]=(77*d[p]+150*d[p+1]+29*d[p+2])>>8;}
-  return a;
-}
-
-/* захват проигрыванием: быстрый фоллбэк, пауза при сворачивании */
-async function playCapture(from,to,opt){
-  const rate=opt.rate||1,step=opt.step||0,onFrame=opt.onFrame,stallMs=opt.stallMs||2500;
-  if(!(await robustSeek(from,2)))return{ok:false};
-  v.muted=true;v.playbackRate=rate;
-  let lastT=-1e9,lastNew=performance.now(),started=performance.now();
-  let done=false,stopped=false,stalled=false,finish=null;
-  let hidden=false,hideT=0,hiddenAcc=0,lastRescue=0;
-  const budget=((to-from)/rate)*6+8000;
-  const fin=()=>{if(done)return;done=true;if(finish)finish();};
-  const onEnded=()=>fin();
-  v.addEventListener('ended',onEnded);
-  const wd=setInterval(()=>{
-    if(done)return;
-    if(cancel){stopped=true;return fin();}
-    if(document.hidden){
-      if(!hidden){hidden=true;hideT=performance.now();v.pause();st.textContent='Пауза — вернитесь на вкладку, поиск продолжится…';}
-      return;
-    }
-    if(hidden){hidden=false;hiddenAcc+=performance.now()-hideT;lastNew=performance.now();lastRescue=performance.now();v.play().catch(()=>{});return;}
-    if(v.ended){return fin();}
-    const idle=performance.now()-lastNew;
-    if(idle>800&&v.paused&&performance.now()-lastRescue>800){lastRescue=performance.now();v.play().catch(()=>{});}
-    if(idle>stallMs){stalled=true;return fin();}
-    if(performance.now()-started-hiddenAcc>budget){stopped=true;return fin();}
-  },200);
-  const push=t=>{
-    if(t<from-1e-4)return;
-    if(t>lastT+1e-6&&(step===0||t-lastT>=step-1e-6)){lastT=t;lastNew=performance.now();onFrame(t);}
-  };
-  await v.play().catch(()=>{});
+/* захват: фазы внутри playCapture */
+async function playPhase(a,b,rate,step,onFrame){
+  let count=0,nextT=a,started=false,wd=0;
+  v.muted=true;
+  v.playbackRate=Math.min(4,Math.max(.25,rate));
+  if(!(await robustSeek(a,2)))return -1;
+  const arm=()=>{clearTimeout(wd);wd=setTimeout(()=>{if(document.hidden)arm();else fin();},2500);};
+  let fin=null;
   await new Promise(r=>{
-    finish=r;
-    if(hasR){
-      const cb=(now,meta)=>{
-        if(done)return r();
-        push(meta.mediaTime);
-        if(cancel||meta.mediaTime>=to-1e-4||v.ended||stopped||stalled){done=true;return r();}
-        v.requestVideoFrameCallback(cb);
-      };
-      v.requestVideoFrameCallback(cb);
-    }else{
-      const loop=()=>{
-        if(done)return r();
-        if(!v.seeking)push(v.currentTime);
-        if(cancel||v.currentTime>=to-1e-4||v.ended||stopped||stalled){done=true;return r();}
-        requestAnimationFrame(loop);
-      };
-      requestAnimationFrame(loop);
-    }
+    fin=r;arm();
+    const tick=()=>{
+      if(cancel){r();return;}
+      if(v.paused&&!document.hidden){try{v.play();}catch(e){}}
+      const t=v.currentTime;
+      if(t>=b-0.001||v.ended){r();return;}
+      if(!started||t>=nextT-0.002){
+        started=true;nextT=step>0?t+step:t;
+        onFrame(t);count++;arm();
+      }
+      if(hasR)v.requestVideoFrameCallback(tick);else requestAnimationFrame(tick);
+    };
+    try{v.play();}catch(e){}
+    if(hasR)v.requestVideoFrameCallback(tick);else requestAnimationFrame(tick);
   });
-  clearInterval(wd);
-  v.removeEventListener('ended',onEnded);
-  v.pause();v.playbackRate=1;
-  return{ok:!cancel&&!stopped&&!stalled,stalled};
+  clearTimeout(wd);
+  try{v.pause();}catch(e){}
+  return count;
 }
-
-/* скан: ускоренно → реалтайм → покадрово */
-async function seekScan(from,to,c,est){
-  const ctx=makeCtx(c),step=1/c.fps;let fails=0,t=from,n=0;
-  while(t<=to+1e-4){
-    if(cancel)return;
+async function seekPhase(a,b,step,onFrame){
+  let count=0;
+  for(let t=a;t<b-0.001&&!cancel;t+=step){
     if(await robustSeek(t,2)){
-      fails=0;
-      if(!times.length||t>times[times.length-1]+1e-4){
-        drawV(ctx,c);frames.push(pixels(ctx,c));times.push(t);prog(times.length,est);
-      }
-    }else if(++fails>=3)throw new Error('seekfail');
-    t+=step;
-    if(++n%3===0)await raf();
-  }
-}
-async function grabFrames(c){
-  frames=[];times=[];fallback=false;
-  const t0=Math.min(c.t0,Math.max(0,v.duration-.05));
-  const t1=Math.max(t0+.1,Math.min(c.t1,v.duration));
-  const est=Math.max(2,Math.ceil((t1-t0)*c.fps));
-  const ctx=makeCtx(c);
-  const push=t=>{drawV(ctx,c);frames.push(pixels(ctx,c));times.push(t);prog(times.length,est);};
-  const lastT=()=>times.length?times[times.length-1]:t0-1/c.fps;
-  const covered=()=>lastT()>=t1-1.5/c.fps;
-  if(hasR){
-    const rate=(c.fast&&c.rate>1)?c.rate:1;
-    phase=rate>1?'Захват кадров (ускоренно)':'Захват кадров (реальное время)';
-    const r1=await playCapture(t0,t1,{rate,step:1/c.fps,onFrame:push,stallMs:2000});
-    if(cancel)throw new Error('cancel');
-    if(times.length>=3&&(r1.ok||covered()))return finishScan(c);
-    fallback=true;
-    let from=times.length?lastT()+1/c.fps:t0;
-    if(rate>1&&from<t1){
-      phase='Захват кадров (реальное время)';
-      st.textContent='Ускоренный захват встал — продолжаю в реальном времени…';await raf();
-      const r2=await playCapture(from,t1,{rate:1,step:1/c.fps,onFrame:push,stallMs:3000});
-      if(cancel)throw new Error('cancel');
-      if(times.length>=3&&(r2.ok||covered()))return finishScan(c);
-      from=times.length?lastT()+1/c.fps:from;
-    }
-    phase='Захват кадров (покадрово)';
-    if(from<t1){
-      try{await seekScan(from,t1,c,est);}
-      catch(e){if(cancel)throw new Error('cancel');}
-    }
-  }else{
-    phase='Захват кадров (покадрово)';
-    try{await seekScan(t0,t1,c,est);}
-    catch(e){
-      if(cancel)throw new Error('cancel');
-      fallback=true;phase='Захват кадров (реальное время)';
-      const from=lastT()+1/c.fps;
-      if(from<t1)await playCapture(from,t1,{rate:1,step:1/c.fps,onFrame:push,stallMs:3000});
+      if(v.currentTime>=b-0.001)break;
+      onFrame(v.currentTime);count++;
     }
   }
-  if(cancel)throw new Error('cancel');
-  if(times.length<3)throw new Error('не удалось получить кадры — попробуйте mp4 или другой браузер');
-  return finishScan(c);
+  return count;
 }
-function finishScan(c){
-  const ds=[];for(let i=1;i<times.length;i++)ds.push(times[i]-times[i-1]);
-  ds.sort((a,b)=>a-b);frameStep=ds[ds.length>>1]||1/c.fps;
-}
-
-/* уточнение (с учётом непрерывности движения) */
-async function refine(list,c){
-  const R=Math.min(c.refinePairs,list.length);
-  if(!R)return;
-  const rad=c.refineRadius/c.fps;
-  const ctx=makeCtx(c),px=frames[0].length;
-  for(let k=0;k<R&&!cancel;k++){
-    st.textContent='Уточнение '+(k+1)+'/'+R+'…';await raf();
-    const r=list[k];
-    const s0=Math.max(0,r.a-rad),s1=Math.min(v.duration,r.b+rad);
-    const A=[],B=[];
-    const cap=await playCapture(s0,s1,{rate:1,step:0,onFrame:t=>{
-      drawV(ctx,c);const f=pixels(ctx,c);
-      if(t<=r.a+rad+1e-4)A.push({t,f});
-      if(t>=r.b-rad-1e-4)B.push({t,f});
-    }});
-    if(!cap.ok)continue;
-    let best=null;
-    for(let x=0;x<A.length;x++)for(let y=0;y<B.length;y++){
-      const X=A[x],Y=B[y],d=Y.t-X.t;
-      if(d<c.minDur-.001||d>c.maxDur+.001)continue;
-      let s=0;for(let i=0;i<px;i++)s+=Math.abs(X.f[i]-Y.f[i]);
-      s/=px*255;
-      let mp=0.25;
-      if(x+1<A.length&&y>=1){
-        const X2=A[x+1].f,Y0=B[y-1].f;let ms=0;
-        for(let i=0;i<px;i++){const dd=(Y.f[i]-Y0[i])-(X2.f[i]-X.f[i]);ms+=dd<0?-dd:dd;}
-        mp=Math.min(1,ms/px/510);
-      }
-      const fin=s+c.motion*mp;
-      if(!best||fin<best.final)best={a:X.t,b:Y.t,score:s,final:fin,ref:true};
-    }
-    if(best&&best.final<=r.final+1e-4)list[k]=best;
+async function playCapture(a,b,opt){
+  const o=Object.assign({rate:1,step:0,onFrame:null,onReset:null,need:0},opt||{});
+  const dur=b-a;
+  if(!(dur>0.02))return{ok:false,count:0};
+  const onVis=()=>{if(document.hidden){try{v.pause();}catch(e){}}};
+  document.addEventListener('visibilitychange',onVis);
+  let count=0;
+  const phases=[];
+  if(o.rate>1)phases.push(o.rate);
+  phases.push(1);
+  if(o.step>0)phases.push(0);
+  for(const ph of phases){
+    if(cancel)break;
+    if(o.onReset)o.onReset();
+    count=ph>0?await playPhase(a,b,ph,o.step,o.onFrame)
+              :await seekPhase(a,b,o.step,o.onFrame);
+    if(count<0)continue;
+    const need=o.need||Math.max(2,Math.ceil(dur/(o.step||1/15)));
+    if(count>=need*0.85)break;
   }
-  list.sort((x,y)=>(x.final??x.score)-(y.final??y.score));
+  document.removeEventListener('visibilitychange',onVis);
+  v.playbackRate=1;
+  try{v.pause();}catch(e){}
+  return{ok:count>1&&!cancel,count};
 }
-
+function makeSig(t){
+  const S=48;snap.width=S;snap.height=S;
+  const r=regionPx(),sctx=snap.getContext('2d');
+  sctx.drawImage(v,r.sx,r.sy,r.sw,r.sh,0,0,S,S);
+  const d=sctx.getImageData(0,0,S,S).data;
+  const md=new Uint8Array(S*S);
+  for(let q=0,p=0;q<md.length;q++,p+=4)md[q]=(d[p]*.299+d[p+1]*.587+d[p+2]*.114)|0;
+  const sig=new Float32Array(192),cell=S/8,m=cell*cell;
+  for(let y=0;y<8;y++)for(let x=0;x<8;x++){
+    let rr=0,gg=0,bb=0;
+    for(let dy=0;dy<cell;dy++)for(let dx=0;dx<cell;dx++){
+      const p=((y*cell+dy)*S+(x*cell+dx))*4;
+      rr+=d[p];gg+=d[p+1];bb+=d[p+2];
+    }
+    const k=y*8+x;sig[k]=rr/m;sig[64+k]=gg/m;sig[128+k]=bb/m;
+  }
+  const tc=document.createElement('canvas');tc.width=24;tc.height=24;
+  tc.getContext('2d').drawImage(snap,0,0,24,24);
+  return{t,sig,md,th:tc};
+}
+function addFrame(t){const f=makeSig(t);frames.push(f);times.push(f.t);}
+function sigDist(a,b,color){
+  let s=0;
+  if(color){for(let k=0;k<192;k++){const d=a[k]-b[k];s+=d*d;}return Math.sqrt(s/192)/255;}
+  for(let k=0;k<64;k++){const d=a[k+64]-b[k+64];s+=d*d;}
+  return Math.sqrt(s/64)/255;
+}
+function fullDiff(a,b){
+  let s=0;const n=Math.min(a.md.length,b.md.length);
+  for(let k=0;k<n;k++){const d=a.md[k]-b.md[k];s+=d*d;}
+  return Math.sqrt(s/n)/255;
+}
+function motionPenalty(i,j){
+  const n=frames.length;
+  if(i+1>=n||j-1<0||j>=n)return 1;
+  const a=frames[i].sig,b=frames[i+1].sig,c=frames[j].sig,e=frames[j-1].sig;
+  let s=0;
+  for(let k=0;k<64;k++){const d=(b[k+64]-a[k+64])-(c[k+64]-e[k+64]);s+=d*d;}
+  return Math.sqrt(s/64)/255;
+}
+async function grabSigs(a,b,step){
+  const out=[];
+  await playCapture(a,b,{rate:1,step,
+    onFrame:t=>out.push(makeSig(t)),
+    onReset:()=>{out.length=0;},
+    need:Math.ceil((b-a)/step)});
+  return out;
+}
+async function refineBoundary(s,e,c){
+  const half=frameStep/2,rad=Math.max(half,c.refineRadius*frameStep);
+  const sA=Math.max(c.t0,s-rad),sB=Math.min(e-c.minDur,s+rad);
+  const eA=Math.max(s+c.minDur,e-rad),eB=Math.min(c.t1,e+rad);
+  if(sB-sA<0.04||eB-eA<0.04)return null;
+  const S=await grabSigs(sA,sB,half);
+  if(cancel||!S.length)return null;
+  const E=await grabSigs(eA,eB,half);
+  if(cancel||!E.length)return null;
+  let best=null;
+  for(const p of S)for(const q of E){
+    const d=q.t-p.t;
+    if(d<c.minDur-0.001||d>c.maxDur+0.001)continue;
+    const sc=sigDist(p.sig,q.sig,c.color);
+    if(!best||sc<best.sc)best={s:p.t,e:q.t,sc};
+  }
+  return best;
+}
 async function findLoop(){
-  if(busy||!v.duration)return;
+  if(busy||prep)return;
+  if(!v.videoWidth){st.textContent='Сначала загрузите видео.';return;}
   const c=cfg();
-  if(c.maxDur<=c.minDur)return st.textContent='Макс. длительность должна быть больше минимальной.';
-  if(c.t1-c.t0<c.minDur)return st.textContent='Диапазон поиска ('+(c.t1-c.t0).toFixed(1)+' с) короче минимального лупа ('+c.minDur.toFixed(1)+' с).';
-  busy=true;cancel=false;$('bCancel').hidden=false;
-  stopLoop();hidePreview();setCropUI(false);res.innerHTML='';
-  $('bFind').disabled=true;$('bPlay').disabled=true;$('bSave').disabled=true;$('bGif').disabled=true;$('bStk').disabled=true;
-  const T0=performance.now();
-  try{
-    await grabFrames(c);
-    st.textContent='Сравнение кадров…';await raf();
-    const n=frames.length,px=frames[0].length,S=c.size,bs=S/8,ch=c.color?3:1;
-    const small=frames.map(f=>{
-      const s=new Uint8Array(64);
-      for(let y=0;y<8;y++)for(let x=0;x<8;x++){
-        let sum=0,cnt=0;
-        for(let yy=y*bs;yy<y*bs+bs;yy++)for(let xx=x*bs;xx<x*bs+bs;xx++){
-          const k=(yy*S+xx)*ch;
-          if(ch===3){sum+=f[k]+f[k+1]+f[k+2];cnt+=3;}else{sum+=f[k];cnt++;}
-        }
-        s[y*8+x]=sum/cnt;
-      }
-      return s;
-    });
-    const K=Math.max(30,c.topN*6),cand=[];let thr=Infinity,lastY=performance.now();
-    for(let i=0;i<(c.fromStart?1:n);i++){
-      const ti=times[i],a=small[i];
-      for(let j=i+1;j<n;j++){
-        const d=times[j]-ti;
-        if(d<c.minDur)continue;
-        if(d>c.maxDur)break;
-        const b=small[j];let s=0;
-        for(let k=0;k<64;k++){s+=Math.abs(a[k]-b[k]);if(s>=thr)break;}
-        if(s<thr){cand.push({i,j,s});
-          if(cand.length>K){cand.sort((p,q)=>p.s-q.s);cand.length=K;thr=cand[K-1].s;}}
-      }
-      if(performance.now()-lastY>250){await raf();lastY=performance.now();if(cancel)throw new Error('cancel');}
-    }
-    if(!cand.length)throw new Error('нет пар кадров в диапазоне '+c.minDur.toFixed(1)+'–'+c.maxDur.toFixed(1)+' с');
-    st.textContent='Точное сравнение…';await raf();
-    let scored=cand.map(p=>{
-      const a=frames[p.i],b=frames[p.j];let s=0;
-      for(let k=0;k<px;k++)s+=Math.abs(a[k]-b[k]);
-      return{i:p.i,j:p.j,a:times[p.i],b:times[p.j],score:s/px/255};
-    });
-    // непрерывность движения: скорость в конце лупа должна совпадать со скоростью в начале
-    for(const r of scored){
-      let mp=0.25;
-      if(r.i+1<n&&r.j>=1){
-        const a0=frames[r.i],a1=frames[r.i+1],b0=frames[r.j-1],b1=frames[r.j];
-        let s=0;
-        for(let k=0;k<px;k++){const d=(b1[k]-b0[k])-(a1[k]-a0[k]);s+=d<0?-d:d;}
-        mp=Math.min(1,s/px/510);
-      }
-      r.final=r.score+c.motion*mp;
-    }
-    scored.sort((x,y)=>x.final-y.final);
-    if(c.minMatch>0)scored=scored.filter(r=>(1-r.score)*100>=c.minMatch);
-    if(c.diffThr<100){
-      const kept=[];
-      for(const r of scored){
-        let ok=true;
-        for(const k of kept){
-          const ov=Math.min(r.b,k.b)-Math.max(r.a,k.a);
-          if(ov>0&&ov/Math.min(r.b-r.a,k.b-k.a)>c.diffThr/100){ok=false;break;}
-        }
-        if(ok)kept.push(r);
-      }
-      scored=kept;
-    }
-    results=scored.slice(0,c.topN);
-    if(!results.length)throw new Error('все кандидаты отсеяны — снизьте «мин. совпадение» или порог перекрытия');
-    await refine(results,c);
-    if(cancel)throw new Error('cancel');
-    cur=results[0];showResults();
-    bar.style.display='none';
-    const cr=cropActive()?' · кроп '+Math.round(cropR.w*100)+'×'+Math.round(cropR.h*100)+'%':'';
-    st.textContent='Готово за '+((performance.now()-T0)/1000).toFixed(1)+' с · '+n+' кадров · совпадение '+((1-cur.score)*100).toFixed(1)+'% · луп '+(cur.b-cur.a).toFixed(2)+' с'+cr+(fallback?' · часть диапазона досканирована медленнее':'');
-    $('bPlay').disabled=false;$('bSave').disabled=false;$('bGif').disabled=false;$('bStk').disabled=false;
-    if($('auto').checked)await startLoop(false);
-  }catch(e){
-    bar.style.display='none';
-    st.textContent=e.message==='cancel'?'Отменено.':'Ошибка: '+e.message;
+  stopLoop();hidePreview();
+  busy=true;cancel=false;frames=[];times=[];results=[];res.innerHTML='';
+  $('bFind').disabled=true;$('bCancel').hidden=false;
+  const a=c.t0,b=c.t1;
+  if(!(b-a>0.2)){st.textContent='Слишком короткий диапазон поиска.';endFind();return;}
+  phase='Анализ';
+  const step=1/c.fps;frameStep=step;
+  const total=Math.ceil((b-a)/step);
+  let got=0;
+  await playCapture(a,b,{
+    rate:c.fast?c.rate:1,step,
+    onFrame:t=>{addFrame(t);got++;prog(got,total);},
+    onReset:()=>{frames=[];times=[];got=0;},
+    need:total});
+  if(cancel){st.textContent='Отменено.';endFind();return;}
+  if(frames.length<4){
+    st.textContent='Не удалось захватить кадры — уменьшите диапазон или включите «Ускоренный захват».';
+    endFind();return;
   }
-  busy=false;cancel=false;$('bCancel').hidden=true;$('bFind').disabled=false;
+  phase='Сравнение';st.textContent='Сравнение кадров…';await raf();
+  const pairs=[],n=frames.length;
+  for(let i=0;i<n;i++){
+    if(c.fromStart&&i>0)break;
+    for(let j=i+1;j<n;j++){
+      const d=times[j]-times[i];
+      if(d<c.minDur)continue;
+      if(d>c.maxDur)break;
+      pairs.push({i,j,score:sigDist(frames[i].sig,frames[j].sig,c.color)});
+    }
+  }
+  if(!pairs.length){
+    st.textContent='Лупов не найдено — расширьте диапазон длительности.';
+    endFind();return;
+  }
+  pairs.sort((x,y)=>x.score-y.score);
+  const scored=[];
+  for(const p of pairs.slice(0,80)){
+    const fd=fullDiff(frames[p.i],frames[p.j]);
+    const mp=motionPenalty(p.i,p.j);
+    scored.push({s:times[p.i],e:times[p.j],fd,mp,comb:fd*(1-c.motion)+mp*c.motion});
+  }
+  scored.sort((x,y)=>x.comb-y.comb);
+  let out=scored.filter(r=>c.minMatch===0||r.fd<=1-c.minMatch);
+  if(!out.length)out=scored;
+  const uniq=[];
+  for(const r of out){
+    const dur=r.e-r.s;
+    let dup=false;
+    for(const o of uniq)
+      if(Math.abs(o.s-r.s)<c.diffThr*dur&&Math.abs(o.e-r.e)<c.diffThr*dur){dup=true;break;}
+    if(!dup)uniq.push(r);
+    if(uniq.length>=c.topN)break;
+  }
+  if(c.refinePairs>0){
+    const kmax=Math.min(c.refinePairs,uniq.length);
+    phase='Уточнение';
+    for(let k=0;k<kmax;k++){
+      if(cancel)break;
+      const r=uniq[k],b2=await refineBoundary(r.s,r.e,c);
+      if(b2){r.s=b2.s;r.e=b2.e;r.fd=b2.sc;r.comb=b2.sc*(1-c.motion)+r.mp*c.motion;}
+      prog(k+1,kmax);
+    }
+    uniq.sort((x,y)=>x.comb-y.comb);
+  }
+  results=uniq;
+  if(cancel){st.textContent='Отменено.';endFind();return;}
+  renderResults();
+  endFind();
 }
-
-function showResults(){
+function endFind(){
+  busy=false;cancel=false;phase='';
+  bar.style.display='none';
+  $('bFind').disabled=false;$('bCancel').hidden=true;
+  v.playbackRate=1;
+}
+function renderResults(){
   res.innerHTML='';
-  results.forEach(r=>{
-    const el=document.createElement('div');el.className='res';
-    el.innerHTML='<span>'+(r.ref?'✚ ':'')+r.a.toFixed(2)+'с → '+r.b.toFixed(2)+'с</span><span>'+(r.b-r.a).toFixed(2)+'с <b>'+((1-r.score)*100).toFixed(1)+'%</b></span>';
-    el.onclick=()=>{cur=r;markCur();startLoop(false);};
+  if(!results.length){
+    st.textContent='Лупов не найдено — расширьте диапазон длительности или снизьте «Мин. совпадение».';
+    return;
+  }
+  results.forEach((r,k)=>{
+    const el=document.createElement('div');
+    el.className='res';
+    el.innerHTML='<span>№'+(k+1)+' · '+(r.e-r.s).toFixed(2)+' с</span><b>'+Math.round(Math.max(0,1-r.fd)*100)+'%</b>';
+    el.onclick=()=>pickResult(k);
     res.appendChild(el);
   });
-  markCur();
+  st.textContent='Найдено лупов: '+results.length+'. Нажмите на вариант.';
+  if($('auto').checked)pickResult(0);
 }
-function markCur(){[...res.children].forEach((el,k)=>el.classList.toggle('on',results[k]===cur));}
-
-/* общее */
-function loopEnd(){return cur.b+($('exLast').checked?0:frameStep*.999);}
-function sizeCanvas(){
-  const r=v.getBoundingClientRect();
-  const dpr=Math.min(window.devicePixelRatio||1,2);
-  const W=Math.max(320,Math.min(1280,Math.round(r.width*dpr)));
-  const H=Math.max(180,Math.round(W*r.height/Math.max(1,r.width)));
-  if(cv.width!==W||cv.height!==H){cv.width=W;cv.height=H;}
+function pickResult(k){
+  const r=results[k];
+  if(!r)return;
+  cur=r;
+  document.querySelectorAll('.res').forEach((el,i)=>el.classList.toggle('on',i===k));
+  startLoop();
 }
-function fitDraw(src,sw,sh){
-  const cw=cv.width,ch=cv.height,s=Math.min(cw/sw,ch/sh);
-  cctx.fillStyle='#000';cctx.fillRect(0,0,cw,ch);
-  cctx.drawImage(src,(cw-sw*s)/2,(ch-sh*s)/2,sw*s,sh*s);
+let seqStep=1/30,loopRAF=0;
+function setButtons(){
+  const on=!!cur&&!busy&&!prep;
+  $('bPlay').disabled=playing||!on;
+  $('bPause').disabled=!playing||!on;
+  ['bSave','bGif','bStk'].forEach(id=>$(id).disabled=!on);
 }
-function drawRegion(){
-  const {sx,sy,sw,sh}=regionPx();
-  const cw=cv.width,ch=cv.height,s=Math.min(cw/sw,ch/sh);
-  cctx.fillStyle='#000';cctx.fillRect(0,0,cw,ch);
-  cctx.drawImage(v,sx,sy,sw,sh,(cw-sw*s)/2,(ch-sh*s)/2,sw*s,sh*s);
+function applyRate(){_rate=Math.min(4,Math.max(.25,+$('spd').value));try{v.playbackRate=_rate;}catch(e){}}
+function loopEnd(){return cur?cur.e-($('exLast').checked?Math.min(frameStep||1/15,.08):0):0;}
+function sizeCanvas(){const r=regionPx();cv.width=r.sw;cv.height=r.sh;}
+function drawFrame(ctx2,tw,th){const r=regionPx();ctx2.drawImage(v,r.sx,r.sy,r.sw,r.sh,0,0,tw,th);}
+function drawRegion(){drawFrame(cctx,cv.width,cv.height);}
+function showPreview(){
+  if(!v.videoWidth)return;
+  previewTok++;sizeCanvas();
+  cv.classList.add('on');drawRegion(cctx);previewOn=true;
 }
-function applyRate(){
-  const r=Math.min(4,Math.max(.25,+$('spd').value||1));
-  if(r!==_rate){_rate=r;v.playbackRate=r;}
+function hidePreview(){previewOn=false;cv.classList.remove('on');}
+function pauseLoop(){
+  playing=false;
+  if(loopCleanup){try{loopCleanup();}catch(e){}loopCleanup=null;}
+  cancelAnimationFrame(seqRAF);seqRAF=0;
+  try{v.pause();}catch(e){}
+  setButtons();
 }
-
-/* превью первого кадра */
-let previewTok=0;
-function hidePreview(){previewTok++;if(previewOn){previewOn=false;cv.classList.remove('on');}}
-async function waitReady(min,timeout){
-  const t0=performance.now();
-  while(v.readyState<min){
-    if(performance.now()-t0>(timeout||3000))return false;
-    await sleep(80);
-  }
-  return true;
-}
-function captureToSnap(){
-  if(!v.videoWidth)return false;
-  const w=Math.min(v.videoWidth,1280),h=Math.round(w*v.videoHeight/v.videoWidth);
-  snap.width=w;snap.height=h;
-  snap.getContext('2d').drawImage(v,0,0,w,h);
-  return true;
-}
-function drawPreview(){if(snap.width&&snap.height)fitDraw(snap,snap.width,snap.height);}
-function frameIsBlack(){
-  const t=document.createElement('canvas');t.width=8;t.height=8;
-  const x=t.getContext('2d',{willReadFrequently:true});
-  try{x.drawImage(v,0,0,8,8);}catch(e){return true;}
-  const d=x.getImageData(0,0,8,8).data;
-  let s=0;for(let i=0;i<d.length;i+=4)s+=d[i]+d[i+1]+d[i+2];
-  return s<24;
-}
-async function showPreview(){
-  const tok=++previewTok;
-  if(!(await waitReady(1,4000)))return;
-  let shown=false;
-  if(await seekOnce(0.05,1500)&&await waitReady(2,1500)){
-    if(!frameIsBlack()&&captureToSnap())shown=true;
-  }
-  if(!shown&&v.duration>1&&await seekOnce(Math.min(v.duration*.1,v.duration-.05),1500)&&await waitReady(2,1500)){
-    if(!frameIsBlack()&&captureToSnap())shown=true;
-  }
-  if(!shown){
-    v.muted=true;v.playbackRate=1;
-    try{v.currentTime=0;}catch(e){}
-    try{await v.play();}catch(e){}
-    if(hasR)await new Promise(r=>{const t=setTimeout(r,900);v.requestVideoFrameCallback(()=>{clearTimeout(t);r();});});
-    else await sleep(600);
-    v.pause();
-    if(captureToSnap())shown=true;
-    try{v.currentTime=0;}catch(e){}
-  }
-  if(shown&&tok===previewTok&&!busy&&!playing){
-    sizeCanvas();drawPreview();cv.classList.add('on');previewOn=true;
-  }
-}
-
-/* бесшовный режим */
-let seqCache=[],seqKeyCur='',seqRAF=0,loopCleanup=null,audioGraph=null,fname='';
-function seqKey(){return cur.a.toFixed(3)+'|'+cur.b.toFixed(3)+'|'+$('exLast').checked+'|'+cropR.x.toFixed(3)+','+cropR.y.toFixed(3)+','+cropR.w.toFixed(3)+','+cropR.h.toFixed(3);}
-async function captureSeq(){
-  const key=seqKey();
-  if(seqCache.length&&key===seqKeyCur)return true;
-  const dur=loopEnd()-cur.a;
-  if(dur>8)return false;
-  seqCache=[];seqKeyCur=key;
-  const vw=v.videoWidth||640,vh=v.videoHeight||360;
-  const est=Math.max(2,Math.ceil(dur*30));
-  let w=Math.min(vw,720);
-  const bytes=w*w*(vh/vw)*4*est;
-  if(bytes>1.6e8)w=Math.max(160,Math.floor(w*Math.sqrt(1.6e8/bytes)));
-  const h=Math.max(2,Math.round(w*vh/vw));
-  const cnv=document.createElement('canvas');cnv.width=w;cnv.height=h;
-  const ctx=cnv.getContext('2d',{willReadFrequently:true});
-  const {sx,sy,sw,sh}=regionPx();
-  const cap=await playCapture(cur.a,loopEnd(),{rate:1,step:0,onFrame:t=>{
-    ctx.drawImage(v,sx,sy,sw,sh,0,0,w,h);
-    const f=document.createElement('canvas');f.width=w;f.height=h;
-    f.getContext('2d').drawImage(cnv,0,0);
-    seqCache.push(f);
-  }});
-  if(!cap.ok||seqCache.length<2){seqCache=[];seqKeyCur='';return false;}
-  return true;
+function stopLoop(){pauseLoop();cv.classList.remove('on');}
+function stopSeq(){cancelAnimationFrame(seqRAF);seqRAF=0;}
+async function captureSeq(s,e){
+  const dur=e-s;
+  if(!(dur>0.05))return false;
+  const step=Math.max(1/30,dur/600);seqStep=step;
+  const r=regionPx(),buf=[],total=Math.ceil(dur/step);
+  phase='Подготовка';
+  const c=cfg();
+  await playCapture(s,e,{rate:c.fast?Math.min(4,c.rate):1,step,
+    onFrame:t=>{
+      const f=document.createElement('canvas');f.width=r.sw;f.height=r.sh;
+      f.getContext('2d').drawImage(v,r.sx,r.sy,r.sw,r.sh,0,0,r.sw,r.sh);
+      buf.push(f);prog(buf.length,total);
+    },
+    onReset:()=>{buf.length=0;},
+    need:total});
+  seqCache=buf;
+  return buf.length>=2&&!cancel;
 }
 function playSeq(){
-  sizeCanvas();
-  cv.classList.add('on');
-  const t0=performance.now();
-  const tick=()=>{
-    if(!playing||prep)return;
-    const spd=Math.min(4,Math.max(.25,+$('spd').value||1));
-    const dur=Math.max(.04,(loopEnd()-cur.a)/spd);
-    const el=((performance.now()-t0)/1000)%dur;
-    const idx=Math.min(seqCache.length-1,Math.floor(el/dur*seqCache.length));
-    const f=seqCache[idx];
-    fitDraw(f,f.width,f.height);
+  stopSeq();pauseLoop();
+  if(!seqCache.length)return;
+  sizeCanvas();cv.classList.add('on');
+  try{v.pause();}catch(e){}
+  playing=true;
+  let idx=0,last=performance.now();
+  const tick=now=>{
+    if(!playing)return;
+    const spd=+$('spd').value;
+    idx+=(now-last)/1000*spd/seqStep;last=now;
+    if(idx>=seqCache.length)idx-=seqCache.length;
+    const f=seqCache[Math.floor(idx)];
+    if(f)try{cctx.drawImage(f,0,0,cv.width,cv.height);}catch(e){}
     seqRAF=requestAnimationFrame(tick);
   };
   seqRAF=requestAnimationFrame(tick);
+  setButtons();
 }
-function stopSeq(){if(seqRAF)cancelAnimationFrame(seqRAF);seqRAF=0;}
-
-/* управление лупом */
-async function startLoop(){
-  if(!cur||busy||prep||cropOn)return;
-  cancel=false;
-  stopSeq();
-  if(loopCleanup){loopCleanup();loopCleanup=null;}
-  hidePreview();
-  playing=true;
-  $('bPlay').disabled=true;$('bPause').disabled=false;
-  applyRate();
-  let mode=$('loopMode').value;
-  if(mode==='video'&&cropActive())mode='canvas';
-  if(mode==='seam'){
-    prep=true;
+async function startSeq(){
+  pauseLoop();
+  const key=cur.s.toFixed(3)+'|'+loopEnd().toFixed(3)+'|'+[cropR.x,cropR.y,cropR.w,cropR.h].map(x=>x.toFixed(3)).join(',');
+  if(seqKeyCur!==key||!seqCache.length){
+    prep=true;setButtons();stopSeq();
     st.textContent='Подготовка бесшовного лупа…';
-    const ok=await captureSeq();
-    prep=false;
-    if(!playing)return;
-    if(ok){playSeq();return;}
-    mode='canvas';
+    const ok=await captureSeq(cur.s,loopEnd());
+    prep=false;setButtons();
+    if(!ok){st.textContent='Предзахват не удался — включён режим Canvas.';runLoop('canvas');return;}
+    seqKeyCur=key;
   }
-  if(mode==='canvas')canvasLoop();else videoLoop();
+  playSeq();
 }
-function canvasLoop(){
-  v.muted=true;
-  sizeCanvas();cv.classList.add('on');
-  let raf2=0;
-  const tick=()=>{
-    if(!playing)return;
-    drawRegion();
-    if(!v.seeking&&(v.currentTime>=loopEnd()-.02||v.ended)){
-      try{v.currentTime=cur.a;}catch(e){}
-      if(v.paused)v.play().catch(()=>{});
-    }
-    raf2=requestAnimationFrame(tick);
-  };
-  raf2=requestAnimationFrame(tick);
-  loopCleanup=()=>{if(raf2)cancelAnimationFrame(raf2);};
-  robustSeek(cur.a,1).then(()=>{if(playing)v.play().catch(()=>{});});
-}
-function videoLoop(){
+function runLoop(kind){
+  pauseLoop();
+  if(kind==='canvas'){sizeCanvas();cv.classList.add('on');}
+  else cv.classList.remove('on');
+  playing=true;
+  applyRate();
   v.muted=$('mute').checked;
-  let raf2=0;
+  const s=cur.s,e=loopEnd(),tok=++previewTok;
   const tick=()=>{
-    if(!playing)return;
-    if(!v.seeking&&(v.currentTime>=loopEnd()-.02||v.ended)){
-      try{v.currentTime=cur.a;}catch(e){}
-      if(v.paused)v.play().catch(()=>{});
-    }
-    raf2=requestAnimationFrame(tick);
+    if(!playing||tok!==previewTok)return;
+    if(v.currentTime>=e-0.005||v.ended){try{v.currentTime=s;}catch(err){}}
+    if(kind==='canvas')drawRegion();
+    loopRAF=requestAnimationFrame(tick);
   };
-  raf2=requestAnimationFrame(tick);
-  loopCleanup=()=>{if(raf2)cancelAnimationFrame(raf2);};
-  robustSeek(cur.a,1).then(()=>{if(playing)v.play().catch(()=>{});});
+  loopCleanup=()=>cancelAnimationFrame(loopRAF);
+  robustSeek(s,2).then(()=>{
+    if(!playing||tok!==previewTok)return;
+    try{v.play();}catch(err){}
+    loopRAF=requestAnimationFrame(tick);
+  });
+  setButtons();
 }
-function pauseLoop(){
-  playing=false;
-  if(loopCleanup){loopCleanup();loopCleanup=null;}
-  stopSeq();
-  v.pause();
-  $('bPlay').disabled=!cur||busy;
-  $('bPause').disabled=true;
+function startLoop(){
+  if(!cur||busy||prep)return;
+  const mode=$('loopMode').value;
+  if(mode==='seam')startSeq();
+  else runLoop(mode==='video'&&!cropActive()?'video':'canvas');
 }
-function stopLoop(){pauseLoop();cv.classList.remove('on');}
-
-/* звук для экспорта */
 function getAudioGraph(){
   if(audioGraph)return audioGraph;
   try{
-    const ac=new (window.AudioContext||window.webkitAudioContext)();
-    const src=ac.createMediaElementSource(v);
-    const dest=ac.createMediaStreamDestination();
-    src.connect(dest);src.connect(ac.destination);
-    audioGraph={ac,src,dest};
-    return audioGraph;
-  }catch(e){return null;}
+    const AC=window.AudioContext||window.webkitAudioContext;
+    const ctx=new AC();
+    const src=ctx.createMediaElementSource(v);
+    const dst=ctx.createMediaStreamDestination();
+    src.connect(dst);src.connect(ctx.destination);
+    audioGraph={ctx,src,dst};
+  }catch(e){audioGraph=null;}
+  return audioGraph;
 }
-
-/* сохранение */
-const fmtSize=b=>b<1024?b+' Б':b<1048576?(b/1024).toFixed(1)+' КБ':(b/1048576).toFixed(2)+' МБ';
-function saveBlob(blob,name){
+function pickMime(){
+  if(!window.MediaRecorder)return'';
+  const list=['video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
+  for(const m of list)if(MediaRecorder.isTypeSupported(m))return m;
+  return'';
+}
+function saveBlob(blob,ext){
   const u=URL.createObjectURL(blob);
   const a=document.createElement('a');
-  a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();
-  setTimeout(()=>URL.revokeObjectURL(u),4000);
+  a.href=u;
+  a.download=(fname.replace(/\.[^.]+$/,'')||'loop')+'_loop.'+ext;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(u),5000);
+  st.textContent='Готово: '+a.download+' ('+(blob.size/1048576).toFixed(1)+' МБ)';
 }
-
-/* экспорт webm/mp4 */
 async function exportVideo(){
-  if(!cur||busy)return;
-  busy=true;cancel=false;$('bCancel').hidden=false;
-  pauseLoop();
-  const a=cur.a,b=loopEnd();
-  const spd=Math.min(4,Math.max(.25,+$('spd').value||1));
-  const {sx,sy,sw,sh}=regionPx();
-  const W=Math.max(2,Math.min(1280,Math.round(sw))),H=Math.max(2,Math.round(W*sh/sw));
-  const cnv=document.createElement('canvas');cnv.width=W;cnv.height=H;
-  const ctx=cnv.getContext('2d');
-  const stream=cnv.captureStream(30);
-  let useAudio=!$('mute').checked;
-  if(useAudio){
+  if(!cur||busy||prep)return;
+  const wasPlaying=playing;
+  pauseLoop();prep=true;setButtons();
+  phase='Экспорт';
+  const s=cur.s,e=loopEnd(),dur=(e-s)/Math.max(.25,+$('spd').value);
+  const r=regionPx();
+  const ec=document.createElement('canvas');ec.width=r.sw;ec.height=r.sh;
+  const ectx=ec.getContext('2d');
+  const mime=pickMime();
+  if(!mime){st.textContent='Запись видео не поддерживается браузером.';prep=false;setButtons();return;}
+  const stream=ec.captureStream(30);
+  let rec;
+  try{rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:8e6});}
+  catch(err){st.textContent='Не удалось запустить запись.';prep=false;setButtons();return;}
+  const chunks=[];
+  rec.ondataavailable=ev=>{if(ev.data.size)chunks.push(ev.data);};
+  const done=new Promise(rs=>{rec.onstop=rs;});
+  const wantAudio=!$('mute').checked;
+  if(wantAudio){
     const g=getAudioGraph();
-    if(g){try{g.ac.resume();}catch(e){}g.dest.stream.getAudioTracks().forEach(t=>stream.addTrack(t));}
-    else useAudio=false;
+    if(g){
+      try{if(g.ctx.state==='suspended')g.ctx.resume();}catch(e2){}
+      g.dst.stream.getAudioTracks().forEach(t=>stream.addTrack(t));
+    }
   }
-  const cands=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm','video/mp4'];
-  const mt=cands.find(t=>window.MediaRecorder&&MediaRecorder.isTypeSupported(t));
-  if(!mt){busy=false;cancel=false;$('bCancel').hidden=true;st.textContent='Браузер не поддерживает запись видео.';return;}
-  const rec=new MediaRecorder(stream,{mimeType:mt,videoBitsPerSecond:6e6});
-  const chunks=[];rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
-  const stopped=new Promise(r=>rec.onstop=r);
-  if(!(await robustSeek(a,2))){busy=false;cancel=false;$('bCancel').hidden=true;st.textContent='Не удалось перейти к началу лупа.';return;}
-  v.muted=!useAudio;v.playbackRate=spd;
+  if(!(await robustSeek(s,3))){prep=false;setButtons();return;}
+  v.playbackRate=Math.max(.25,+$('spd').value);
+  v.muted=!wantAudio;
   rec.start(250);
-  st.textContent='Запись лупа… 0%';
-  await v.play().catch(()=>{});
-  const t0=performance.now(),total=(b-a)/spd;
-  await new Promise(r=>{
+  const t0=performance.now();
+  st.textContent='Экспорт '+dur.toFixed(1)+' с — не сворачивайте вкладку…';
+  await new Promise(rs=>{
     const tick=()=>{
-      ctx.drawImage(v,sx,sy,sw,sh,0,0,W,H);
-      if(cancel||v.currentTime>=b-.02||v.ended){r();return;}
-      st.textContent='Запись лупа… '+Math.min(100,Math.round((performance.now()-t0)/1000/total*100))+'%';
+      if((performance.now()-t0)/1000>=dur||cancel){rs();return;}
+      if(v.currentTime>=e-0.005){try{v.currentTime=s;}catch(e3){}}
+      drawFrame(ectx,ec.width,ec.height);
       requestAnimationFrame(tick);
     };
+    try{v.play();}catch(e4){}
     requestAnimationFrame(tick);
   });
-  v.pause();v.playbackRate=1;
-  rec.stop();await stopped;
-  v.muted=$('mute').checked;
-  if(!cancel){
-    const blob=new Blob(chunks,{type:mt});
-    saveBlob(blob,'loop_'+a.toFixed(2)+'-'+b.toFixed(2)+(cropActive()?'_crop':'')+'.'+(mt.includes('mp4')?'mp4':'webm'));
-    st.textContent='Сохранено: '+fmtSize(blob.size)+' · '+W+'×'+H+' · '+total.toFixed(2)+' с'+(useAudio?' · со звуком':'');
-  }else st.textContent='Экспорт отменён.';
-  busy=false;cancel=false;$('bCancel').hidden=true;
+  try{v.pause();}catch(e5){}
+  v.playbackRate=1;v.muted=true;
+  rec.stop();await done;
+  prep=false;setButtons();
+  if(cancel){st.textContent='Экспорт отменён.';return;}
+  saveBlob(new Blob(chunks,{type:mime}),mime.indexOf('mp4')>=0?'mp4':'webm');
+  if(wasPlaying)startLoop();
 }
-/* GIF-экспорт (свой энкодер, без библиотек) */
-function buildPalette(raws){
-  const hist=new Uint32Array(4096);
-  for(const d of raws)for(let i=0;i<d.length;i+=16){
-    hist[((d[i]>>4)<<8)|((d[i+1]>>4)<<4)|(d[i+2]>>4)]++;
-  }
-  const keys=[];
-  for(let k=0;k<4096;k++)if(hist[k])keys.push(k);
-  keys.sort((x,y)=>hist[y]-hist[x]);
-  const top=keys.slice(0,255);
-  const pal=new Uint8Array(768),map=new Int16Array(4096).fill(-1);
-  top.forEach((k,i)=>{
-    map[k]=i;
-    pal[i*3]=(k>>8&15)*17;pal[i*3+1]=(k>>4&15)*17;pal[i*3+2]=(k&15)*17;
-  });
-  for(let k=0;k<4096;k++){
-    if(map[k]>=0)continue;
-    const r=(k>>8&15)*17,g=(k>>4&15)*17,bl=(k&15)*17;
+function buildPalette(fr){
+  const cnt=new Uint32Array(32768);
+  for(const d of fr)for(let p=0;p<d.length;p+=4)cnt[((d[p]&248)<<7)|((d[p+1]&248)<<2)|(d[p+2]>>3)]++;
+  const list=[];
+  for(let k=0;k<32768;k++)if(cnt[k])list.push([k,cnt[k]]);
+  list.sort((a,b)=>b[1]-a[1]);
+  const top=list.slice(0,255);
+  const pal=new Uint8Array(768);
+  top.forEach((e,i)=>{const k=e[0];pal[i*3]=((k>>10)&31)<<3|4;pal[i*3+1]=((k>>5)&31)<<3|4;pal[i*3+2]=(k&31)<<3|4;});
+  const lut=new Uint8Array(4096);
+  for(let b=0;b<4096;b++){
+    const r=(b>>8&15)*17,g2=(b>>4&15)*17,bl=(b&15)*17;
     let bi=0,bd=1e9;
     for(let i=0;i<top.length;i++){
-      const dr=r-pal[i*3],dg=g-pal[i*3+1],db=bl-pal[i*3+2];
-      const d=dr*dr+dg*dg+db*db;
+      const dr=r-pal[i*3],dg=g2-pal[i*3+1],db=bl-pal[i*3+2],d=dr*dr+dg*dg+db*db;
       if(d<bd){bd=d;bi=i;}
     }
-    map[k]=bi;
+    lut[b]=bi;
   }
-  return{pal,map};
+  return{pal,lut};
 }
-function gifLZW(idx,minCodeSize){
-  const CLEAR=1<<minCodeSize,EOI=CLEAR+1;
-  const out=[];let buf=0,bufBits=0,codeSize=minCodeSize+1;
-  let dict=new Map(),next=EOI+1;
-  const emit=c=>{buf|=c<<bufBits;bufBits+=codeSize;while(bufBits>=8){out.push(buf&255);buf>>=8;bufBits-=8;}};
-  const reset=()=>{dict=new Map();next=EOI+1;codeSize=minCodeSize+1;};
-  emit(CLEAR);
-  let curC=idx[0];
-  for(let i=1;i<idx.length;i++){
-    const k=idx[i],key=curC*256+k;
-    const d=dict.get(key);
-    if(d!==undefined){curC=d;continue;}
-    emit(curC);
+function gifLZW(idx){
+  if(!idx.length)return new Uint8Array(0);
+  const out=[];let cur=0,bits=0;
+  const put=(code,n)=>{cur|=code<<bits;bits+=n;while(bits>=8){out.push(cur&255);cur>>>=8;bits-=8;}};
+  let codeSize=9,next=258,dict=new Map();
+  put(256,codeSize);
+  let prefix=idx[0];
+  for(let p=1;p<idx.length;p++){
+    const px=idx[p],key=(prefix<<8)|px,d=dict.get(key);
+    if(d!==undefined){prefix=d;continue;}
+    put(prefix,codeSize);
     if(next<4096){
-      dict.set(key,next);
+      dict.set(key,next);next++;
       if(next===(1<<codeSize)&&codeSize<12)codeSize++;
-      next++;
-    }else{emit(CLEAR);reset();}
-    curC=k;
-  }
-  emit(curC);emit(EOI);
-  if(bufBits>0)out.push(buf&255);
-  return out;
-}
-function encodeGIF(W,H,pal,delayCs,idxs){
-  const out=[];
-  const push=(...a)=>out.push(...a);
-  push(0x47,0x49,0x46,0x38,0x39,0x61);
-  push(W&255,W>>8,H&255,H>>8,0xF7,0,0);
-  for(let i=0;i<768;i++)out.push(pal[i]);
-  push(0x21,0xFF,0x0B);
-  for(const c of 'NETSCAPE2.0')push(c.charCodeAt(0));
-  push(3,1,0,0,0);
-  for(const idx of idxs){
-    push(0x21,0xF9,4,0x04,delayCs&255,delayCs>>8,0);
-    push(0x2C,0,0,0,0,W&255,W>>8,H&255,H>>8,0);
-    push(8);
-    const data=gifLZW(idx,8);
-    for(let i=0;i<data.length;i+=255){
-      const n=Math.min(255,data.length-i);
-      push(n);
-      out.push(...data.slice(i,i+n));
+    }else{
+      put(256,codeSize);
+      dict=new Map();codeSize=9;next=258;
     }
-    push(0);
+    prefix=px;
   }
-  push(0x3B);
-  return new Blob([new Uint8Array(out)],{type:'image/gif'});
+  put(prefix,codeSize);put(257,codeSize);
+  if(bits>0)out.push(cur&255);
+  return new Uint8Array(out);
+}
+function encodeGIF(fr,w,h,delay){
+  const{pal,lut}=buildPalette(fr);
+  const B=[71,73,70,56,57,97];
+  const w16=x=>B.push(x&255,x>>8&255);
+  w16(w);w16(h);B.push(0xF7,0,0);
+  for(let i=0;i<768;i++)B.push(pal[i]);
+  B.push(0x21,0xFF,0x0B);for(const ch of 'NETSCAPE2.0')B.push(ch.charCodeAt(0));
+  B.push(3,1,0,0,0);
+  const idx=new Uint8Array(w*h);
+  for(const d of fr){
+    for(let p=0,q=0;q<w*h;p+=4,q++)idx[q]=lut[((d[p]&240)<<4)|(d[p+1]&240)|(d[p+2]>>4)];
+    B.push(0x21,0xF9,4,4,delay&255,delay>>8&255,0,0);
+    B.push(0x2C);w16(0);w16(0);w16(w);w16(h);B.push(0,8);
+    const lzw=gifLZW(idx);
+    for(let i=0;i<lzw.length;i+=255){
+      const n=Math.min(255,lzw.length-i);
+      B.push(n,...lzw.subarray(i,i+n));
+    }
+    B.push(0);
+  }
+  B.push(0x3B);
+  return new Blob([new Uint8Array(B)],{type:'image/gif'});
 }
 async function exportGIF(){
-  if(!cur||busy)return;
-  busy=true;cancel=false;$('bCancel').hidden=false;
-  pauseLoop();
-  const a=cur.a,b=loopEnd();
-  const spd=Math.min(4,Math.max(.25,+$('spd').value||1));
-  const dur=(b-a)/spd;
-  const nF=Math.min(90,Math.max(2,Math.ceil(dur*15)));
-  const mediaStep=(b-a)/nF;
-  const delayCs=Math.max(2,Math.round(100*dur/nF));
-  const {sx,sy,sw,sh}=regionPx();
-  const ar=sw/sh;
-  let W=Math.min(480,Math.round(sw)),H=Math.round(W/ar);
-  if(H>480){H=480;W=Math.round(H*ar);}
-  W=Math.max(2,W);H=Math.max(2,H);
-  const cnv=document.createElement('canvas');cnv.width=W;cnv.height=H;
-  const ctx=cnv.getContext('2d',{willReadFrequently:true});
-  const raws=[];
-  phase='GIF: захват кадров';
-  await playCapture(a,b,{rate:spd,step:mediaStep,onFrame:t=>{
-    ctx.drawImage(v,sx,sy,sw,sh,0,0,W,H);
-    raws.push(ctx.getImageData(0,0,W,H).data);
-    prog(raws.length,nF);
-  }});
-  if(cancel){busy=false;cancel=false;$('bCancel').hidden=true;bar.style.display='none';st.textContent='Экспорт отменён.';return;}
-  if(raws.length<2){busy=false;cancel=false;$('bCancel').hidden=true;bar.style.display='none';st.textContent='Не удалось снять кадры для GIF.';return;}
-  st.textContent='GIF: палитра…';await raf();
-  const {pal,map}=buildPalette(raws);
-  st.textContent='GIF: кодирование '+raws.length+' кадров…';await raf();
-  const idxs=[];
-  for(const d of raws){
-    const idx=new Uint8Array(W*H);
-    for(let p=0,i=0;p<idx.length;p++,i+=4)idx[p]=map[((d[i]>>4)<<8)|((d[i+1]>>4)<<4)|(d[i+2]>>4)];
-    idxs.push(idx);
-    if(idxs.length%10===0)await raf();
-  }
-  const blob=encodeGIF(W,H,pal,delayCs,idxs);
-  saveBlob(blob,'loop_'+a.toFixed(2)+'-'+b.toFixed(2)+'.gif');
-  bar.style.display='none';
-  st.textContent='GIF готов: '+fmtSize(blob.size)+' · '+W+'×'+H+' · '+raws.length+' кадров · '+dur.toFixed(2)+' с';
-  busy=false;cancel=false;$('bCancel').hidden=true;
+  if(!cur||busy||prep)return;
+  const wasPlaying=playing;
+  pauseLoop();prep=true;setButtons();
+  phase='GIF';
+  const s=cur.s,e=loopEnd(),dur=e-s;
+  if(!(dur>0.08)){prep=false;setButtons();st.textContent='Луп слишком короткий для GIF.';return;}
+  const c=cfg();
+  const step=Math.max(1/15,dur/90);
+  const total=Math.ceil(dur/step);
+  const r=regionPx(),scale=Math.min(1,480/Math.max(r.sw,r.sh));
+  const gw=Math.max(2,Math.round(r.sw*scale)),gh=Math.max(2,Math.round(r.sh*scale));
+  const gc=document.createElement('canvas');gc.width=gw;gc.height=gh;
+  const gctx=gc.getContext('2d',{willReadFrequently:true});
+  const fdata=[];
+  await playCapture(s,e,{rate:c.fast?c.rate:1,step,
+    onFrame:()=>{drawFrame(gctx,gw,gh);fdata.push(gctx.getImageData(0,0,gw,gh).data);prog(fdata.length,total);},
+    onReset:()=>{fdata.length=0;},
+    need:total});
+  if(cancel||fdata.length<2){prep=false;setButtons();st.textContent=cancel?'Отменено.':'Не удалось захватить кадры для GIF.';return;}
+  st.textContent='Кодирование GIF…';await raf();
+  const delay=Math.max(2,Math.round(100*step/Math.max(.25,+$('spd').value)));
+  const blob=encodeGIF(fdata,gw,gh,delay);
+  prep=false;setButtons();
+  saveBlob(blob,'gif');
+  if(wasPlaying)startLoop();
 }
-
-/* экспорт Telegram-стикера: VP9 webm, 512 px, ≤3 с, ≤30 к/с, без звука, ≤256 КБ */
 async function exportSticker(){
-  if(!cur||busy)return;
-  if(!(window.MediaRecorder&&MediaRecorder.isTypeSupported('video/webm;codecs=vp9'))){
-    st.textContent='Этот браузер не умеет кодировать VP9 — стикер не собрать (попробуйте Chrome или Firefox).';
-    return;
-  }
-  busy=true;cancel=false;$('bCancel').hidden=false;
-  pauseLoop();
-  const a=cur.a,b=loopEnd();
-  const {sx,sy,sw,sh}=regionPx();
-  const ar=sw/sh;
-  let W,H;
-  if(ar>=1){W=512;H=Math.min(512,Math.round(512/ar));}
-  else{H=512;W=Math.min(512,Math.round(512*ar));}
-  W=Math.max(2,W-W%2);H=Math.max(2,H-H%2);
-  let spd=Math.min(4,Math.max(.25,+$('spd').value||1));
-  if((b-a)/spd>2.95)spd=(b-a)/2.95;
-  const cnv=document.createElement('canvas');cnv.width=W;cnv.height=H;
-  const ctx=cnv.getContext('2d');
-  const stream=cnv.captureStream(30);
-  const MAXB=250*1024;
-  let br=5e5,ok=false,msg='',seekFail=false;
-  for(let att=0;att<6&&!cancel;att++){
+  if(!cur||busy||prep)return;
+  if(!window.MediaRecorder||!MediaRecorder.isTypeSupported('video/webm;codecs=vp9')){st.textContent='Браузер не поддерживает VP9 — стикер недоступен.';return;}
+  const wasPlaying=playing;
+  pauseLoop();prep=true;setButtons();
+  phase='Стикер';
+  const s=cur.s,e=loopEnd(),dur=e-s;
+  const spd=Math.max(.25,+$('spd').value);
+  let rate=spd;
+  if(dur/spd>3)rate=Math.min(16,dur/3);
+  const outDur=dur/rate;
+  if(outDur>3.05){prep=false;setButtons();st.textContent='Луп длиннее 48 с — не влезает в стикер.';return;}
+  const r=regionPx(),scale=512/Math.max(r.sw,r.sh);
+  const tw=Math.max(2,Math.round(r.sw*scale)),th=Math.max(2,Math.round(r.sh*scale));
+  const ec=document.createElement('canvas');ec.width=tw;ec.height=th;
+  const ectx=ec.getContext('2d');
+  const stream=ec.captureStream(30);
+  let blob=null;
+  for(const br of[500000,300000,160000]){
+    if(!(await robustSeek(s,3)))break;
+    drawFrame(ectx,tw,th);
+    v.playbackRate=rate;v.muted=true;
     const rec=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp9',videoBitsPerSecond:br});
-    const chunks=[];rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
-    const stopped=new Promise(r=>rec.onstop=r);
-    if(!(await robustSeek(a,2))){seekFail=true;break;}
-    v.muted=true;v.playbackRate=spd;
+    const chunks=[];rec.ondataavailable=ev=>{if(ev.data.size)chunks.push(ev.data);};
+    const done=new Promise(rs=>{rec.onstop=rs;});
     rec.start(200);
-    st.textContent='Стикер: запись (попытка '+(att+1)+', битрейт '+Math.round(br/1000)+' кбит/с)…';
-    await v.play().catch(()=>{});
-    await new Promise(r=>{
+    st.textContent='Запись стикера '+outDur.toFixed(1)+' с — не сворачивайте вкладку…';
+    const t0=performance.now();
+    await new Promise(rs=>{
       const tick=()=>{
-        ctx.drawImage(v,sx,sy,sw,sh,0,0,W,H);
-        if(cancel||v.currentTime>=b-.02||v.ended){r();return;}
+        if((performance.now()-t0)/1000>=outDur||cancel){rs();return;}
+        if(v.currentTime>=e-0.005){try{v.currentTime=s;}catch(err){}}
+        drawFrame(ectx,tw,th);
         requestAnimationFrame(tick);
       };
+      try{v.play();}catch(err){}
       requestAnimationFrame(tick);
     });
-    v.pause();
-    rec.stop();await stopped;
-    const blob=new Blob(chunks,{type:'video/webm'});
-    if(blob.size<=MAXB||br<=6e4){
-      if(!cancel){
-        saveBlob(blob,'sticker_'+a.toFixed(2)+'-'+b.toFixed(2)+'.webm');
-        msg='Стикер: '+fmtSize(blob.size)+' · '+W+'×'+H+' · '+((b-a)/spd).toFixed(2)+' с'+(blob.size>256*1024?' — больше 256 КБ, Telegram может не принять':' — готов, отправьте боту @Stickers (/newpack)');
-      }
-      ok=true;break;
-    }
-    br=Math.max(6e4,Math.floor(br*MAXB/blob.size*0.85));
+    try{v.pause();}catch(err){}
+    rec.stop();await done;
+    if(cancel)break;
+    blob=new Blob(chunks,{type:'video/webm'});
+    if(blob.size<=262144)break;
+    st.textContent='Слишком большой ('+Math.round(blob.size/1024)+' КБ) — пробую меньший битрейт…';
   }
-  v.playbackRate=1;v.muted=$('mute').checked;
-  if(cancel)msg='Экспорт отменён.';
-  else if(!ok)msg=seekFail?'Не удалось перейти к началу лупа.':'Не удалось уложиться в 256 КБ — укорите луп или включите кроп.';
-  st.textContent=msg;
-  busy=false;cancel=false;$('bCancel').hidden=true;
+  v.playbackRate=1;
+  prep=false;setButtons();
+  if(cancel){st.textContent='Экспорт отменён.';return;}
+  if(blob&&blob.size<=262144)saveBlob(blob,'webm');
+  else st.textContent='Не удалось уложиться в 256 КБ — сократите луп или включите кроп.';
+  if(wasPlaying)startLoop();
 }
-
-/* загрузка файла */
-function loadBlob(file){
-  if(!file)return;
-  if(busy){
-    cancel=true;
-    st.textContent='Отменяю текущую операцию, затем загружу новый файл…';
-    const t0=performance.now();
-    const wait=()=>{
-      if(!busy)doLoad(file);
-      else if(performance.now()-t0<8000)setTimeout(wait,150);
-      else doLoad(file);
-    };
-    setTimeout(wait,150);
-    return;
+function loadBlob(f){
+  if(!f)return;
+  if(busy||prep){st.textContent='Дождитесь окончания операции.';return;}
+  if(f.type&&!/^video\//.test(f.type)&&!/\.(mp4|webm|mov|mkv|avi|m4v)$/i.test(f.name||'')){st.textContent='Это не похоже на видеофайл.';return;}
+  doLoad(f);
+}
+async function doLoad(f){
+  try{
+    stopLoop();hidePreview();
+    busy=false;cancel=false;prep=false;phase='';
+    cur=null;results=[];res.innerHTML='';
+    seqCache=[];seqKeyCur='';frames=[];times=[];
+    if(url)URL.revokeObjectURL(url);
+    url=URL.createObjectURL(f);
+    fname=f.name||'video';
+    v.muted=true;v.playbackRate=1;
+    v.src=url;
+    st.textContent='Загрузка…';
+    await new Promise((rs,rj)=>{
+      const ok=()=>{clean();rs();},bad=()=>{clean();rj(new Error('decode'));};
+      const clean=()=>{v.removeEventListener('loadeddata',ok);v.removeEventListener('error',bad);};
+      v.addEventListener('loadeddata',ok,{once:true});
+      v.addEventListener('error',bad,{once:true});
+    });
+    setDurMax(v.duration);
+    $('bFind').disabled=false;
+    showPreview();setButtons();
+    st.textContent=fName();
+  }catch(err){
+    st.textContent='Ошибка загрузки — формат не поддерживается браузером.';
   }
-  doLoad(file);
 }
-function doLoad(file){
-  stopLoop();hidePreview();
-  if(cropOn){setCropUI(false);cropWasPlaying=false;}
-  cropR={x:0,y:0,w:1,h:1};updateCropInfo();
-  if(url)URL.revokeObjectURL(url);
-  url=URL.createObjectURL(file);
-  fname=file.name||'видео';
-  results=[];cur=null;seqCache=[];seqKeyCur='';
-  res.innerHTML='';
-  $('bPlay').disabled=true;$('bPause').disabled=true;
-  $('bSave').disabled=true;$('bGif').disabled=true;$('bStk').disabled=true;$('bFind').disabled=true;
-  cancel=false;
-  v.src=url;v.classList.add('has');
-  v.muted=$('mute').checked;
-  st.textContent='Загрузка '+fname+'…';
-}
-
-/* кнопки */
 $('bFile').onclick=()=>$('file').click();
-$('file').addEventListener('change',e=>{
-  const f=e.target.files[0];
-  if(f)loadBlob(f);
-  e.target.value='';
-});
+$('file').onchange=e=>{if(e.target.files[0])loadBlob(e.target.files[0]);e.target.value='';};
 $('bFind').onclick=findLoop;
-$('bCancel').onclick=()=>{cancel=true;};
-$('bPlay').onclick=()=>startLoop();
+$('bCancel').onclick=()=>{cancel=true;st.textContent='Отмена…';};
+$('bPlay').onclick=()=>{if(cur)startLoop();};
 $('bPause').onclick=pauseLoop;
 $('bSave').onclick=exportVideo;
 $('bGif').onclick=exportGIF;
 $('bStk').onclick=exportSticker;
-$('mute').addEventListener('change',()=>{if(!busy)v.muted=$('mute').checked;});
-$('spd').addEventListener('input',()=>applyRate());
-$('exLast').addEventListener('change',()=>{if(playing&&!busy&&!prep&&!cropOn)startLoop();});
-$('loopMode').addEventListener('change',()=>{if(playing&&!busy&&!prep&&!cropOn)startLoop();});
-
-/* фикс скорости: захват и экспорт сбрасывают playbackRate в 1 — форсируем установку */
-const _applyRateOrig=applyRate;
-applyRate=function(){_rate=-1;_applyRateOrig();};
-
-/* кроп блокируется во время поиска/экспорта */
-['bCrop','bSq','bCr'].forEach(id=>{
-  const el=$(id),old=el.onclick;
-  el.onclick=e=>{
-    if(busy||prep){st.textContent='Дождитесь окончания операции — кроп сейчас заблокирован.';return;}
-    old(e);
-  };
-});
-
-/* Ctrl+V — вставить видео из буфера */
-document.addEventListener('paste',e=>{
-  const items=e.clipboardData&&e.clipboardData.items;
-  if(!items)return;
-  for(const it of items){
-    if(it.kind==='file'){
-      const f=it.getAsFile();
-      if(f&&(f.type.startsWith('video/')||!f.type)){e.preventDefault();loadBlob(f);return;}
-    }
+document.addEventListener('dragover',e=>e.preventDefault());
+document.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];if(f)loadBlob(f);});
+window.addEventListener('paste',e=>{
+  const cd=e.clipboardData;if(!cd)return;
+  if(cd.files&&cd.files.length){loadBlob(cd.files[0]);return;}
+  if(cd.items)for(const it of cd.items){
+    if(it.kind==='file'&&it.type&&/^video\//.test(it.type)){const f=it.getAsFile();if(f){loadBlob(f);return;}}
   }
 });
-
-/* drag&drop */
-document.addEventListener('dragover',e=>e.preventDefault());
-document.addEventListener('drop',e=>{
-  e.preventDefault();
-  const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
-  if(!f)return;
-  if(f.type.startsWith('video/')||!f.type)loadBlob(f);
-  else st.textContent='Это не видеофайл: '+(f.name||'без имени');
-});
-
-/* события видео */
-v.addEventListener('loadedmetadata',()=>{
-  const D=isFinite(v.duration)?v.duration:30;
-  setDurMax(D);
-  $('t0').max=D;
-  if(+$('t0').value>D)$('t0').value=0;
-  $('bFind').disabled=false;
-  st.textContent=fname+' · '+D.toFixed(1)+' с · '+(v.videoWidth||0)+'×'+(v.videoHeight||0);
-  showPreview();
-});
-v.addEventListener('error',()=>{
-  st.textContent='Не удалось открыть файл — попробуйте mp4/webm или другой браузер.';
-});
-
-/* пересчёт при изменении размеров */
-if(window.ResizeObserver){
-  new ResizeObserver(()=>{
-    sizeCanvas();
-    if(previewOn)drawPreview();
-    if(cropOn)layoutCrop();
-  }).observe(v);
-}
-window.addEventListener('resize',()=>{
+new ResizeObserver(()=>{
   if(cropOn)layoutCrop();
-  if(previewOn){sizeCanvas();drawPreview();}
-});
+  if(previewOn&&!playing&&v.videoWidth){sizeCanvas();drawRegion();}
+}).observe(document.querySelector('.vwrap'));
+setButtons();
 </script>
 </body>
 </html>
